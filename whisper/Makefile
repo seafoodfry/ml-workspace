@@ -1,6 +1,6 @@
 IMG := whisper-lab
-
 OP_RUN_FLAGS := #--network none
+
 
 .PHONY: debug
 debug: build
