@@ -1,4 +1,3 @@
-import os
 import shutil
 from pytube import YouTube
 from pathlib import Path
@@ -6,9 +5,21 @@ from time import sleep
 from tqdm import tqdm
 
 
+def progress_function(stream, chunk, bytes_remaining):
+    """
+    This function is called automatically by Pytube during download.
+    - `stream`: pytube stream object being downloaded.
+    - `chunk`: segment of media file that was just downloaded.
+    - `bytes_remaining`: how many bytes remain to be downloaded.
+    """
+    #total_size = stream.filesize
+    #bytes_downloaded = total_size - bytes_remaining
+    progress_bar.update(len(chunk))  # Update the progress bar by the size of the last chunk received.
+
+
 if __name__ == "__main__":
     outputs_dir = Path('outputs')
-    os.makedirs(outputs_dir, exist_ok=True)
+    outputs_dir.mkdir(parents=True, exist_ok=True)  # Ensure output directory exists.
 
     to_download = [
         #'https://www.youtube.com/watch?v=KZsk8B_z8pI&list=PL5EH0ZJ7V0jV7kMYvPcZ7F9oaf_YAlfbI&index=2',
@@ -39,13 +50,19 @@ if __name__ == "__main__":
         'https://www.youtube.com/watch?v=RULYnEYFtAU&list=PL5EH0ZJ7V0jV7kMYvPcZ7F9oaf_YAlfbI&index=26',
         'https://www.youtube.com/watch?v=6JN-DJuSFUY&list=PL5EH0ZJ7V0jV7kMYvPcZ7F9oaf_YAlfbI&index=27',
     ]
-    for video in tqdm(to_download):
-        yt = YouTube(video)
+    for video_url in to_download:
+        # yt = YouTube(video)
+        yt = YouTube(video_url, on_progress_callback=progress_function)
+        # stream = yt.streams.filter(progressive=True, file_extension="mp4").order_by("resolution").desc().first() 
         stream = yt.streams.filter(progressive=True, file_extension="mp4").order_by("resolution").desc().first()
-        temp_video_path = stream.download()  # This downloads the video to the current working directory
 
-        video = Path(temp_video_path)  # Get the path of the downloaded file
-        new_video_path = outputs_dir / video.name  # Define the new path for the video in the output directory
-        shutil.move(str(video), str(new_video_path))  # Move the file to the new location
+        # Initialize progress bar for this video
+        progress_bar = tqdm(total=stream.filesize, unit='B', unit_scale=True, desc=f"Downloading {yt.title}", leave=True)
+        temp_video_path = stream.download(skip_existing=False)  # Download the video
+        progress_bar.close()
+
+        video = Path(temp_video_path)
+        new_video_path = outputs_dir / video.name
+        shutil.move(str(video), str(new_video_path))
 
         sleep(5)
