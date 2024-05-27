@@ -148,3 +148,23 @@ You can then view it locally by running
 ```
 ssh -L 8888:127.0.0.1:8888 ubuntu@${EC2}
 ```
+
+
+---
+
+## Cuda by Example
+
+This sandbox was created to follow along with
+[developer.nvidia.com/cuda-example](https://developer.nvidia.com/cuda-example).
+We downloaded the zip file and its contents are in [cuda_by_example](./cuda_by_example).
+
+Since we did this on a mac, we also checked if the aurantine attribute was associated with the files
+with
+```
+ls -l@
+```
+
+And we removed it the following command
+```
+xattr -r -d com.apple.quarantine cuda_by_example
+```
