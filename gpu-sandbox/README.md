@@ -84,7 +84,7 @@ and found this candidate
 ### Running the GPU
 
 
-Run the followi
+Run the following
 ```
 terraform init
 ```
@@ -129,7 +129,7 @@ Or
 scp ubuntu@${EC2}:/home/ubuntu/Animations-101.ipynb .
 ```
 
-Note that for Amazon Linux 2 EC2s the default username is `ec2-user`.
+
 
 ---
 
@@ -167,4 +167,51 @@ ls -l@
 And we removed it the following command
 ```
 xattr -r -d com.apple.quarantine cuda_by_example
+```
+
+
+---
+
+## Testing the GPU
+
+Try out the compiler
+```
+$ nvcc --version
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2023 NVIDIA Corporation
+Built on Mon_Apr__3_17:16:06_PDT_2023
+Cuda compilation tools, release 12.1, V12.1.105
+Build cuda_12.1.r12.1/compiler.32688072_0
+```
+
+Try the system management interface
+```
+$ nvidia-smi
+Wed May 29 02:48:55 2024
++---------------------------------------------------------------------------------------+
+| NVIDIA-SMI 535.161.08             Driver Version: 535.161.08   CUDA Version: 12.2     |
+|-----------------------------------------+----------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |         Memory-Usage | GPU-Util  Compute M. |
+|                                         |                      |               MIG M. |
+|=========================================+======================+======================|
+|   0  Tesla T4                       On  | 00000000:00:1E.0 Off |                    0 |
+| N/A   24C    P8               8W /  70W |      2MiB / 15360MiB |      0%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
+
++---------------------------------------------------------------------------------------+
+| Processes:                                                                            |
+|  GPU   GI   CI        PID   Type   Process name                            GPU Memory |
+|        ID   ID                                                             Usage      |
+|=======================================================================================|
+|  No running processes found                                                           |
++---------------------------------------------------------------------------------------+
+```
+
+
+Now we can actually try some code.
+Copy the source,
+```
+scp -r app ec2-user@${EC2}:/home/ec2-user/src
 ```

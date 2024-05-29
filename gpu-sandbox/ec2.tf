@@ -37,7 +37,7 @@ resource "aws_instance" "gpu" {
   }
 }
 
-output "ubuntu" {
+output "public_dns" {
   value       = aws_instance.gpu.public_dns
   description = "Public DNS"
 }
