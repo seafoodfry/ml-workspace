@@ -86,7 +86,7 @@ and found this candidate
 
 Run the following
 ```
-terraform init
+./run-cmd-in-shell.sh terraform init
 ```
 
 We will set the `my_ip` variable as follows

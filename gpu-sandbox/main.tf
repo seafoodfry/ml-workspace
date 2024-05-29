@@ -1,4 +1,10 @@
 terraform {
+  backend "s3" {
+    bucket = "seafoodfry-tf-backend"
+    key    = "gpu-sandbox"
+    region = "us-east-2"
+    }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
