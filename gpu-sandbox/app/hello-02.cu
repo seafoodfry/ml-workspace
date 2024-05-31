@@ -21,11 +21,13 @@ int main(void) {
     The (void**) cast is necessary because cudaMalloc expects a pointer to a void* pointer
     as its first argument.
     */
-    HANDLE_ERROR( cudaMalloc((void**)&dev_c, sizeof(int)) );
+   cudaError_t err = cudaMalloc((void**)&dev_c, sizeof(int));
+    HANDLE_ERROR(err);
 
     add<<<1,1>>>(2, 7, dev_c);
 
-    HANDLE_ERROR( cudaMemcpy(&c, dev_c, sizeof(int), cudaMemcpyDeviceToHost) );
+    err = cudaMemcpy(&c, dev_c, sizeof(int), cudaMemcpyDeviceToHost);
+    HANDLE_ERROR(err);
 
     printf("2 + 7 = %d\n", c);
     cudaFree(dev_c);
