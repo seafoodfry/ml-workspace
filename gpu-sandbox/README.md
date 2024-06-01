@@ -120,44 +120,42 @@ So we looked for the newest version with
 We ended up going with
 ```json
 {
-    "Architecture": "x86_64",
-    "CreationDate": "2024-05-24T03:36:31.000Z",
-    "ImageId": "ami-07b96297c00002b58",
-    "ImageLocation": "amazon/al2023-ami-minimal-2023.4.20240528.0-kernel-6.1-x86_64",
-    "ImageType": "machine",
-    "Public": true,
-    "OwnerId": "137112412989",
-    "PlatformDetails": "Linux/UNIX",
-    "UsageOperation": "RunInstances",
-    "State": "available",
-    "BlockDeviceMappings": [
-        {
-            "DeviceName": "/dev/xvda",
-            "Ebs": {
-                "DeleteOnTermination": true,
-                "Iops": 3000,
-                "SnapshotId": "snap-0b456f19570704cda",
-                "VolumeSize": 8,
-                "VolumeType": "gp3",
-                "Throughput": 125,
-                "Encrypted": false
+        "Architecture": "x86_64",
+        "CreationDate": "2024-05-30T00:51:59.000Z",
+        "ImageId": "ami-04064f2a9939d4f29",
+        "ImageLocation": "amazon/amzn2-ami-kernel-5.10-hvm-2.0.20240529.0-x86_64-ebs",
+        "ImageType": "machine",
+        "Public": true,
+        "OwnerId": "137112412989",
+        "PlatformDetails": "Linux/UNIX",
+        "UsageOperation": "RunInstances",
+        "State": "available",
+        "BlockDeviceMappings": [
+            {
+                "DeviceName": "/dev/xvda",
+                "Ebs": {
+                    "DeleteOnTermination": true,
+                    "SnapshotId": "snap-07f3b72092a551eb6",
+                    "VolumeSize": 8,
+                    "VolumeType": "standard",
+                    "Encrypted": false
+                }
             }
-        }
-    ],
-    "Description": "Amazon Linux 2023 AMI 2023.4.20240528.0 x86_64 Minimal HVM kernel-6.1",
-    "EnaSupport": true,
-    "Hypervisor": "xen",
-    "ImageOwnerAlias": "amazon",
-    "Name": "al2023-ami-minimal-2023.4.20240528.0-kernel-6.1-x86_64",
-    "RootDeviceName": "/dev/xvda",
-    "RootDeviceType": "ebs",
-    "SriovNetSupport": "simple",
-    "VirtualizationType": "hvm",
-    "BootMode": "uefi-preferred",
-    "DeprecationTime": "2024-08-22T03:37:00.000Z"
-},
+        ],
+        "Description": "Amazon Linux 2 Kernel 5.10 AMI 2.0.20240529.0 x86_64 HVM ebs",
+        "EnaSupport": true,
+        "Hypervisor": "xen",
+        "ImageOwnerAlias": "amazon",
+        "Name": "amzn2-ami-kernel-5.10-hvm-2.0.20240529.0-x86_64-ebs",
+        "RootDeviceName": "/dev/xvda",
+        "RootDeviceType": "ebs",
+        "SriovNetSupport": "simple",
+        "VirtualizationType": "hvm",
+        "DeprecationTime": "2025-07-01T00:00:00.000Z"
+    },
 ```
-Because it has a kernel v6 and was the latest build for this month.
+Note that we chose an Amazon Linux 2 AMI for compatibility with our GPU instances.
+
 
 ### Running the GPU
 

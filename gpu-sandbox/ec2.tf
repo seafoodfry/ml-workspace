@@ -32,7 +32,7 @@ resource "aws_instance" "gpu" {
     http_tokens = "required"
   }
 
-  user_data = base64encode(templatefile("${path.module}/setup.sh.tpl", local.vars))
+  user_data = base64encode(templatefile("${path.module}/gpu-setup.sh.tpl", local.vars))
 
   tags = {
     Name = "gpu"
@@ -55,7 +55,7 @@ resource "aws_instance" "dev" {
     }
   }
 
-  ami           = "ami-07b96297c00002b58"
+  ami           = "ami-04064f2a9939d4f29"
   instance_type = "t3.xlarge"
 
   associate_public_ip_address = true
@@ -72,7 +72,7 @@ resource "aws_instance" "dev" {
     http_tokens = "required"
   }
 
-  user_data = base64encode(templatefile("${path.module}/setup.sh.tpl", local.vars))
+  user_data = base64encode(templatefile("${path.module}/dev-setup.sh.tpl", local.vars))
 
   tags = {
     Name = "dev"
