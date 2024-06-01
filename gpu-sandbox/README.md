@@ -23,7 +23,7 @@ brew install jq
 
 ## Spining Up a GPU
 
-### Finding an AMI
+### Finding a GPU AMI
 
 While checking out what AMIs were recommended through the launch wizard, we came across the
 AMI ID `ami-0296a329aeec73707` published by amazon with the title
@@ -80,6 +80,84 @@ and found this candidate
     "DeprecationTime": "2026-05-22T09:42:47.000Z"
 },
 ```
+
+
+### Finding a Non-GPU AMI
+
+Following the procedure outlined below, we saw the AMI `ami-0ca2e925753ca2fb4` as one of the recommende
+AMIs when trying to launch an EC2 from the console.
+Running
+
+```
+./run-cmd-in-shell.sh aws ec2 describe-images --image-ids ami-0ca2e925753ca2fb4
+```
+Gave us
+```json
+{
+    "Images": [
+        {
+            "Architecture": "x86_64",
+            "CreationDate": "2024-05-24T03:27:51.000Z",
+            "ImageId": "ami-0ca2e925753ca2fb4",
+            "ImageLocation": "amazon/al2023-ami-2023.4.20240528.0-kernel-6.1-x86_64",
+            "OwnerId": "137112412989",
+            "PlatformDetails": "Linux/UNIX",
+            "Description": "Amazon Linux 2023 AMI 2023.4.20240528.0 x86_64 HVM kernel-6.1",
+            "ImageOwnerAlias": "amazon",
+            "Name": "al2023-ami-2023.4.20240528.0-kernel-6.1-x86_64",
+            "DeprecationTime": "2024-08-22T03:28:00.000Z"
+            ...
+        }
+    ]
+}
+```
+
+So we looked for the newest version with
+```
+./run-cmd-in-shell.sh aws ec2 describe-images --owner amazon --filters "Name=platform-details,Values=Linux/UNIX" "Name=architecture,Values=x86_64" "Name=creation-date,Values=2024-05*" "Name=description,Values=*Amazon Linux*" --query 'Images[?!contains(Description, `ECS`) && !contains(Description, `EKS`) && !contains(Description, `gp2`)]' > out.json
+```
+
+We ended up going with
+```json
+{
+    "Architecture": "x86_64",
+    "CreationDate": "2024-05-24T03:36:31.000Z",
+    "ImageId": "ami-07b96297c00002b58",
+    "ImageLocation": "amazon/al2023-ami-minimal-2023.4.20240528.0-kernel-6.1-x86_64",
+    "ImageType": "machine",
+    "Public": true,
+    "OwnerId": "137112412989",
+    "PlatformDetails": "Linux/UNIX",
+    "UsageOperation": "RunInstances",
+    "State": "available",
+    "BlockDeviceMappings": [
+        {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+                "DeleteOnTermination": true,
+                "Iops": 3000,
+                "SnapshotId": "snap-0b456f19570704cda",
+                "VolumeSize": 8,
+                "VolumeType": "gp3",
+                "Throughput": 125,
+                "Encrypted": false
+            }
+        }
+    ],
+    "Description": "Amazon Linux 2023 AMI 2023.4.20240528.0 x86_64 Minimal HVM kernel-6.1",
+    "EnaSupport": true,
+    "Hypervisor": "xen",
+    "ImageOwnerAlias": "amazon",
+    "Name": "al2023-ami-minimal-2023.4.20240528.0-kernel-6.1-x86_64",
+    "RootDeviceName": "/dev/xvda",
+    "RootDeviceType": "ebs",
+    "SriovNetSupport": "simple",
+    "VirtualizationType": "hvm",
+    "BootMode": "uefi-preferred",
+    "DeprecationTime": "2024-08-22T03:37:00.000Z"
+},
+```
+Because it has a kernel v6 and was the latest build for this month.
 
 ### Running the GPU
 
