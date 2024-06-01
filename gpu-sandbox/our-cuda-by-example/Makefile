@@ -6,3 +6,5 @@ main-01:
 	./02-hello.out
 	nvcc 03-cudaDeviceProp.cu -o 03-cudaDeviceProp.out
 	./03-cudaDeviceProp.out
+	nvcc 04-choose-gpu.cu -o 04-choose-gpu.out
+	./04-choose-gpu.out

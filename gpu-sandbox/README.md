@@ -213,5 +213,5 @@ Wed May 29 02:48:55 2024
 Now we can actually try some code.
 Copy the source,
 ```
-scp -r app ec2-user@${EC2}:/home/ec2-user/src
+scp -r our-cuda-by-example ec2-user@${EC2}:/home/ec2-user/src
 ```
