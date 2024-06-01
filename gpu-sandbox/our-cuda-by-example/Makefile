@@ -8,3 +8,5 @@ main-01:
 	./03-cudaDeviceProp.out
 	nvcc 04-choose-gpu.cu -o 04-choose-gpu.out
 	./04-choose-gpu.out
+	nvcc 05-vector-sum.cu -o 05-vector-sum.out
+	time ./05-vector-sum.out
