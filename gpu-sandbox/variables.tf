@@ -18,3 +18,5 @@ variable "dev_machines" {
   description = "Number of non-GPU instances to spin up"
   default = 0
 }
+
+data "aws_region" "current" {}

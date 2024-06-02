@@ -81,6 +81,12 @@ and found this candidate
 },
 ```
 
+### Finding a NICE DCV AMI
+
+```
+./run-cmd-in-shell.sh aws ec2 describe-images --owner amazon --filters "Name=platform-details,Values=Linux/UNIX" "Name=architecture,Values=x86_64"  "Name=name,Values=*Amazon Linux 2*" "Name=creation-date,Values=2024-05*" > out.json
+```
+
 
 ### Finding a Non-GPU AMI
 
@@ -248,7 +254,7 @@ xattr -r -d com.apple.quarantine cuda_by_example
 
 ---
 
-## Testing the GPU
+## Testing the GPU and openGL
 
 Try out the compiler
 ```
@@ -287,11 +293,58 @@ Wed May 29 02:48:55 2024
 
 
 Now we can actually try some code.
-Copy the source,
+
+First, copy the source,
 ```
 scp -r our-cuda-by-example ec2-user@${EC2}:/home/ec2-user/src
 ```
 
+There are two good sources of docs here
+1. [What is DCV](https://docs.aws.amazon.com/dcv/latest/adminguide/what-is-dcv.html). You'll really need to read the docs though!
+2. [Deploy an EC2 instance with NICE DCV](https://www.hpcworkshops.com/06-nice-dcv/standalone/08-deploy-ec2.html)
+
+Once the EC2 is ready we will perform the following checks.
+First check, taken from 
+[Prerequisites for Linux NICE DCV servers](https://docs.aws.amazon.com/dcv/latest/adminguide/setting-up-installing-linux-prereq.html#linux-prereq-xserver)
+```
+sudo DISPLAY=:0 XAUTHORITY=$(ps aux | grep "X.*\-auth" | grep -v grep | sed -n 's/.*-auth \([^ ]\+\).*/\1/p') glxinfo | grep -i "opengl.*version"
+```
+
+Then we will perform a couple more commands from
+[Post-Installation checks](https://docs.aws.amazon.com/dcv/latest/adminguide/setting-up-installing-linux-checks.html)
+```
+sudo DISPLAY=:0 XAUTHORITY=$(ps aux | grep "X.*\-auth" | grep -v grep | sed -n 's/.*-auth \([^ ]\+\).*/\1/p') xhost | grep "SI:localuser:dcv$"
+```
+This one is ok if it doesn't return anything.
+
+```
+sudo DISPLAY=:0 XAUTHORITY=$(ps aux | grep "X.*\-auth" | grep -v grep | sed -n 's/.*-auth \([^ ]\+\).*/\1/p') xhost | grep "LOCAL:$"
+```
+This one should return something.
+
+This one should return no errors, maybe just an info item.
+```
+sudo dcvgldiag
+```
+
+To check that the DCV server is running do
+```
+sudo systemctl status dcvserver
+```
+
+And to get the fingerprint of its self-signed certificate (we'll needed when we actually sign in)
 ```
 dcv list-endpoints -j
 ```
+
+Now, we need to give `ec2-user` an actual password
+```
+sudo passwd ec2-user
+```
+
+And create a session.
+```
+dcv create-session dcvdemo
+```
+
+At thsi point we are ready to use NICE DCV.

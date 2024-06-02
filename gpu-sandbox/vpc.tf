@@ -27,6 +27,13 @@ resource "aws_security_group" "ssh" {
     protocol    = "tcp"
     cidr_blocks = ["${var.my_ip}/32"]
   }
+  ingress {
+    description = "DCV"
+    from_port   = 8443
+    to_port     = 8443
+    protocol    = "tcp"
+    cidr_blocks = ["${var.my_ip}/32"]
+  }
 
   egress {
     from_port        = 0

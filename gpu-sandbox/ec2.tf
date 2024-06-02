@@ -32,6 +32,7 @@ resource "aws_instance" "gpu" {
     http_tokens = "required"
   }
 
+  iam_instance_profile = aws_iam_instance_profile.dcv.name
   user_data = base64encode(templatefile("${path.module}/gpu-setup.sh.tpl", local.vars))
 
   tags = {
