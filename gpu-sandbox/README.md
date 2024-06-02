@@ -23,7 +23,7 @@ brew install jq
 
 ## Spining Up a GPU
 
-### Finding an AMI
+### Finding a GPU AMI
 
 While checking out what AMIs were recommended through the launch wizard, we came across the
 AMI ID `ami-0296a329aeec73707` published by amazon with the title
@@ -80,6 +80,88 @@ and found this candidate
     "DeprecationTime": "2026-05-22T09:42:47.000Z"
 },
 ```
+
+### Finding a NICE DCV AMI
+
+```
+./run-cmd-in-shell.sh aws ec2 describe-images --owner amazon --filters "Name=platform-details,Values=Linux/UNIX" "Name=architecture,Values=x86_64"  "Name=name,Values=*Amazon Linux 2*" "Name=creation-date,Values=2024-05*" > out.json
+```
+
+
+### Finding a Non-GPU AMI
+
+Following the procedure outlined below, we saw the AMI `ami-0ca2e925753ca2fb4` as one of the recommende
+AMIs when trying to launch an EC2 from the console.
+Running
+
+```
+./run-cmd-in-shell.sh aws ec2 describe-images --image-ids ami-0ca2e925753ca2fb4
+```
+Gave us
+```json
+{
+    "Images": [
+        {
+            "Architecture": "x86_64",
+            "CreationDate": "2024-05-24T03:27:51.000Z",
+            "ImageId": "ami-0ca2e925753ca2fb4",
+            "ImageLocation": "amazon/al2023-ami-2023.4.20240528.0-kernel-6.1-x86_64",
+            "OwnerId": "137112412989",
+            "PlatformDetails": "Linux/UNIX",
+            "Description": "Amazon Linux 2023 AMI 2023.4.20240528.0 x86_64 HVM kernel-6.1",
+            "ImageOwnerAlias": "amazon",
+            "Name": "al2023-ami-2023.4.20240528.0-kernel-6.1-x86_64",
+            "DeprecationTime": "2024-08-22T03:28:00.000Z"
+            ...
+        }
+    ]
+}
+```
+
+So we looked for the newest version with
+```
+./run-cmd-in-shell.sh aws ec2 describe-images --owner amazon --filters "Name=platform-details,Values=Linux/UNIX" "Name=architecture,Values=x86_64" "Name=creation-date,Values=2024-05*" "Name=description,Values=*Amazon Linux*" --query 'Images[?!contains(Description, `ECS`) && !contains(Description, `EKS`) && !contains(Description, `gp2`)]' > out.json
+```
+
+We ended up going with
+```json
+{
+        "Architecture": "x86_64",
+        "CreationDate": "2024-05-30T00:51:59.000Z",
+        "ImageId": "ami-04064f2a9939d4f29",
+        "ImageLocation": "amazon/amzn2-ami-kernel-5.10-hvm-2.0.20240529.0-x86_64-ebs",
+        "ImageType": "machine",
+        "Public": true,
+        "OwnerId": "137112412989",
+        "PlatformDetails": "Linux/UNIX",
+        "UsageOperation": "RunInstances",
+        "State": "available",
+        "BlockDeviceMappings": [
+            {
+                "DeviceName": "/dev/xvda",
+                "Ebs": {
+                    "DeleteOnTermination": true,
+                    "SnapshotId": "snap-07f3b72092a551eb6",
+                    "VolumeSize": 8,
+                    "VolumeType": "standard",
+                    "Encrypted": false
+                }
+            }
+        ],
+        "Description": "Amazon Linux 2 Kernel 5.10 AMI 2.0.20240529.0 x86_64 HVM ebs",
+        "EnaSupport": true,
+        "Hypervisor": "xen",
+        "ImageOwnerAlias": "amazon",
+        "Name": "amzn2-ami-kernel-5.10-hvm-2.0.20240529.0-x86_64-ebs",
+        "RootDeviceName": "/dev/xvda",
+        "RootDeviceType": "ebs",
+        "SriovNetSupport": "simple",
+        "VirtualizationType": "hvm",
+        "DeprecationTime": "2025-07-01T00:00:00.000Z"
+    },
+```
+Note that we chose an Amazon Linux 2 AMI for compatibility with our GPU instances.
+
 
 ### Running the GPU
 
@@ -172,7 +254,7 @@ xattr -r -d com.apple.quarantine cuda_by_example
 
 ---
 
-## Testing the GPU
+## Testing the GPU and openGL
 
 Try out the compiler
 ```
@@ -211,7 +293,58 @@ Wed May 29 02:48:55 2024
 
 
 Now we can actually try some code.
-Copy the source,
+
+First, copy the source,
 ```
-scp -r app ec2-user@${EC2}:/home/ec2-user/src
+scp -r our-cuda-by-example ec2-user@${EC2}:/home/ec2-user/src
 ```
+
+There are two good sources of docs here
+1. [What is DCV](https://docs.aws.amazon.com/dcv/latest/adminguide/what-is-dcv.html). You'll really need to read the docs though!
+2. [Deploy an EC2 instance with NICE DCV](https://www.hpcworkshops.com/06-nice-dcv/standalone/08-deploy-ec2.html)
+
+Once the EC2 is ready we will perform the following checks.
+First check, taken from 
+[Prerequisites for Linux NICE DCV servers](https://docs.aws.amazon.com/dcv/latest/adminguide/setting-up-installing-linux-prereq.html#linux-prereq-xserver)
+```
+sudo DISPLAY=:0 XAUTHORITY=$(ps aux | grep "X.*\-auth" | grep -v grep | sed -n 's/.*-auth \([^ ]\+\).*/\1/p') glxinfo | grep -i "opengl.*version"
+```
+
+Then we will perform a couple more commands from
+[Post-Installation checks](https://docs.aws.amazon.com/dcv/latest/adminguide/setting-up-installing-linux-checks.html)
+```
+sudo DISPLAY=:0 XAUTHORITY=$(ps aux | grep "X.*\-auth" | grep -v grep | sed -n 's/.*-auth \([^ ]\+\).*/\1/p') xhost | grep "SI:localuser:dcv$"
+```
+This one is ok if it doesn't return anything.
+
+```
+sudo DISPLAY=:0 XAUTHORITY=$(ps aux | grep "X.*\-auth" | grep -v grep | sed -n 's/.*-auth \([^ ]\+\).*/\1/p') xhost | grep "LOCAL:$"
+```
+This one should return something.
+
+This one should return no errors, maybe just an info item.
+```
+sudo dcvgldiag
+```
+
+To check that the DCV server is running do
+```
+sudo systemctl status dcvserver
+```
+
+And to get the fingerprint of its self-signed certificate (we'll needed when we actually sign in)
+```
+dcv list-endpoints -j
+```
+
+Now, we need to give `ec2-user` an actual password
+```
+sudo passwd ec2-user
+```
+
+And create a session.
+```
+dcv create-session dcvdemo
+```
+
+At thsi point we are ready to use NICE DCV.

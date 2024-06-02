@@ -10,7 +10,7 @@ module "vpc" {
 
 
   enable_nat_gateway     = true
-  single_nat_gateway     = false
+  single_nat_gateway     = true
   one_nat_gateway_per_az = false
 
 }
@@ -24,6 +24,13 @@ resource "aws_security_group" "ssh" {
     description = "SSH"
     from_port   = 22
     to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["${var.my_ip}/32"]
+  }
+  ingress {
+    description = "DCV"
+    from_port   = 8443
+    to_port     = 8443
     protocol    = "tcp"
     cidr_blocks = ["${var.my_ip}/32"]
   }
