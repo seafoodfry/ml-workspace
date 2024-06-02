@@ -291,3 +291,7 @@ Copy the source,
 ```
 scp -r our-cuda-by-example ec2-user@${EC2}:/home/ec2-user/src
 ```
+
+```
+dcv list-endpoints -j
+```
