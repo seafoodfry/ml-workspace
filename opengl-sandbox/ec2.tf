@@ -36,7 +36,7 @@ resource "aws_instance" "gpu" {
   user_data = base64encode(templatefile("${path.module}/gpu-setup.sh.tpl", local.vars))
 
   tags = {
-    Name = "gpu"
+    Name = "gpu-opengl"
   }
 }
 
@@ -76,7 +76,7 @@ resource "aws_instance" "dev" {
   user_data = base64encode(templatefile("${path.module}/dev-setup.sh.tpl", local.vars))
 
   tags = {
-    Name = "dev"
+    Name = "dev-opengl"
   }
 }
 

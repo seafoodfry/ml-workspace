@@ -64,15 +64,9 @@ cat /var/log/cloud-init-output.log
 
 ---
 
-## SSH Cheatsheet
+## NICE DCV Cheatsheet
 
 
-Now we can actually try some code.
-
-First, copy the source,
-```
-scp -r our-cuda-by-example ec2-user@${EC2}:/home/ec2-user/src
-```
 
 There are two good sources of docs here
 1. [What is DCV](https://docs.aws.amazon.com/dcv/latest/adminguide/what-is-dcv.html). You'll really need to read the docs though!
@@ -132,3 +126,56 @@ At thsi point we are ready to use NICE DCV.
 3. Profile: Core
 4. Options: check the box for "Generate a loader"
 5. Click Generate
+
+
+Now we can go and copy our source code into the ec2 and try it out
+```
+scp -r src ec2-user@${EC2}:/home/ec2-user/src
+```
+
+[github.com/glfw/glfw/releases](https://github.com/glfw/glfw/releases)
+```
+mkdir glfw
+cd glfw/
+wget -O glfw.zip https://github.com/glfw/glfw/releases/download/3.4/glfw-3.4.zip
+unzip glfw.zip
+cd glfw-3.4/
+```
+
+To see the avialbale generators, the possible arguments for `cmake . -B build -G <generator>` you can run
+`cmake --help`.
+In our case `"Unix Makefiles"` was the default generator so we proceeded with
+```
+cmake -S . -B build
+```
+
+```
+sudo yum install -y libX11-devel libXrandr-devel libXinerama-devel libXcursor-devel libXi-devel
+sudo yum install -y wayland-devel wayland-protocols-devel libxkbcommon-devel
+```
+
+compile
+```
+cd build/
+make
+sudo make install
+```
+
+Compile the test program,
+```
+g++ -std=c++11 -I./include -c test_glad.c
+g++ -std=c++11 -I./include -c glad.c
+```
+
+And link it,
+```
+g++ -o test_glad test_glad.o glad.o -lGL -lglfw3 -lX11 -lpthread -lXrandr -lXi -ldl
+```
+
+- `lGL``: Links against the OpenGL library.
+- `lglfw3``: Links against the GLFW library.
+- `lX11``: Links against the X11 library.
+- `lpthread``: Links against the POSIX threads library.
+- `lXrandr``: Links against the X11 RandR extension library.
+- `lXi``: Links against the X11 Xinput extension library.
+- `ldl``: Links against the dynamic linking library.

@@ -1,7 +1,7 @@
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
-  name = "nr"
+  name = "opengl"
   cidr = "10.0.0.0/16"
 
   azs             = ["us-east-2a", "us-east-2b", "us-east-2c"]
@@ -16,7 +16,7 @@ module "vpc" {
 }
 
 resource "aws_security_group" "ssh" {
-  name        = "ssh"
+  name        = "ssh-opengl"
   description = "Allow SSH from a specific IP"
   vpc_id      = module.vpc.vpc_id
 

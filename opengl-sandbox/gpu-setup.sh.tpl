@@ -2,6 +2,9 @@
 set -x
 set -e
 
+date > /home/ec2-user/CLOUDINIT-STARTED
+
+
 sudo yum update -y
 sudo yum install -y freeglut-devel mesa-libGL-devel
 
@@ -32,6 +35,37 @@ sudo yum install -y nice-dcv-gl-2023.1.1047-1.el7.x86_64.rpm
 
 sudo systemctl enable dcvserver
 
-touch /home/ec2-user/CLOUDINIT-COMPLETED
+cat << 'EOF' > /home/ec2-user/dcv-diagnostics.sh 
+#!/bin/bash
+
+sudo dcvgldiag
+
+sudo DISPLAY=:0 XAUTHORITY=$(ps aux | grep "X.*\-auth" | grep -v grep | sed -n 's/.*-auth \([^ ]\+\).*/\1/p') xhost | grep "SI:localuser:dcv$"
+
+sudo DISPLAY=:0 XAUTHORITY=$(ps aux | grep "X.*\-auth" | grep -v grep | sed -n 's/.*-auth \([^ ]\+\).*/\1/p') glxinfo | grep -i "opengl.*version"
+
+sudo systemctl status dcvserver
+
+dcv list-endpoints -j
+
+EOF
+chmod +x /home/ec2-user/dcv-diagnostics.sh
+
+
+cat << 'EOF' > /home/ec2-user/dcv-setup.sh 
+#!/bin/bash
+
+
+dcv list-endpoints -j
+
+dcv create-session dcvdemo
+
+sudo passwd ec2-user
+
+EOF
+chmod +x /home/ec2-user/dcv-setup.sh
+
+date > /home/ec2-user/CLOUDINIT-COMPLETED
+
 
 sudo reboot

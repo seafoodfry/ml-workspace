@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "trust_relationship" {
 }
 
 resource "aws_iam_role" "dcv" {
-  name               = "dcv"
+  name               = "dcv-opengl"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.trust_relationship.json
 }
@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "dcv" {
 }
 
 resource "aws_iam_policy" "s3_get_policy" {
-  name        = "dcv"
+  name        = "dcv-opengl"
   description = "https://docs.aws.amazon.com/dcv/latest/adminguide/setting-up-license.html"
   policy      = data.aws_iam_policy_document.dcv.json
 }

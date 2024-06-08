@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
     bucket = "seafoodfry-tf-backend"
-    key    = "gpu-sandbox"
+    key    = "opengl-sandbox"
     region = "us-east-2"
     }
 
