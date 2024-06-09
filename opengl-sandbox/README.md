@@ -130,7 +130,7 @@ At thsi point we are ready to use NICE DCV.
 
 Now we can go and copy our source code into the ec2 and try it out
 ```
-scp -r src ec2-user@${EC2}:/home/ec2-user/src
+scp -r learning-opengl/ ec2-user@${EC2}:/home/ec2-user/src
 ```
 
 [github.com/glfw/glfw/releases](https://github.com/glfw/glfw/releases)

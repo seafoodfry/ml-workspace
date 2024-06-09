@@ -65,7 +65,26 @@ sudo passwd ec2-user
 EOF
 chmod +x /home/ec2-user/dcv-setup.sh
 
+
+
+# Install GLFW.
+sudo yum install -y libX11-devel libXrandr-devel libXinerama-devel libXcursor-devel libXi-devel
+sudo yum install -y wayland-devel wayland-protocols-devel libxkbcommon-devel
+
+cd /home/ec2-user
+mkdir glfw
+cd glfw/
+wget -O glfw.zip https://github.com/glfw/glfw/releases/download/3.4/glfw-3.4.zip
+unzip glfw.zip
+cd glfw-3.4/
+
+cmake -S . -B build
+
+cd build/
+make
+sudo make install
+
+
+
 date > /home/ec2-user/CLOUDINIT-COMPLETED
-
-
 sudo reboot
