@@ -4,7 +4,7 @@ CC := g++
 # -Wall turns on most compiler warnings
 # -Wextra https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wextra
 # -Werror Make all warnings into errors. 
-CFLAGS := -g -O2 -Wall -Wextra -Wshadow -Werror -std=c++17 -I./include #-std=gnu++latest # std=c++20 -std=c++17 -std=c++14 -std=c++11
+CFLAGS := -g -O2 -Wall -Wextra -Wshadow -Werror -std=c++17 -I./../include #-std=gnu++latest # std=c++20 -std=c++17 -std=c++14 -std=c++11
 LFLAGS := -lGL -lglfw3 -lX11 -lpthread -lXrandr -lXi -ldl
 
 TARGET = test_glad
