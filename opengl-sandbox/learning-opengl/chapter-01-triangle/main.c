@@ -53,56 +53,71 @@ int main() {
     std::string fragmentShaderCode = readShaderCode("shader.frag");
     GLuint fragmentShader = compileShader(fragmentShaderCode, GL_FRAGMENT_SHADER);
 
-
-    // Every shader and rendering call after this will use the shader program object.
-    glUseProgram(shaderProgam);
+    // Create and link the shaders to create a shader program.
+    std::vector<GLuint> shaders = {vertexShader, fragmentShader};
+    GLuint shaderProgram = createShaderProgram(shaders);
     for (const auto& shader: shaders) {
-        glDetachShader(shader);
+        glDetachShader(shaderProgram, shader);
         glDeleteShader(shader);
     }
 
+    /*
+        Configure vertex attributes.
+    */
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f, 
+        -0.5f, -0.5f, 0.0f,  // Left.
+         0.5f, -0.5f, 0.0f,  // Right.
+         0.0f,  0.5f, 0.0f,  // Top.
     };
 
-    unsigned int VBO;
+    /*
+        1. Bind vertex array objects.
+        2. Copy our vertices arrays in a buffer for openGL to use.
+        3. Then set the vertex attribute pointers.
+    */
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+
+    glBindVertexArray(VAO);
+
     glGenBuffers(1, &VBO);
     // Bind the VBO buffer to the GL_ARRAY_BUFFER target.
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // Copy the vertex data into the buffer.
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // The call glVertexAttribPointer() registered VBO as the vertex attribute's bound
+    // vertex buffer object, so we can safely unbind now.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Now we can also unding the VAO so that other VAO calls won't modify this one.
+    glBindVertexArray(0);
+
+
     while (!glfwWindowShouldClose(window)) {
         // Process input.
         processInput(window);
 
         // Render.
-        //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        //glClearColor(0.96f, 0.51f, 0.19f, 1.0f);
-
-        // Calculate the color based on the elapsed time.
-        // initial orange color (0.95f, 0.91f, 0.69f) and the target orange-ish color (0.98f, 0.91f, 0.69f)
-        // fmod is the floating point remainder, https://en.cppreference.com/w/cpp/numeric/math/fmod
-        // For example, fmod(5.1, 3) = 2.1.
-        // The glfwGetTime() function returns the time elapsed since GLFW was initialized, in seconds,
-        // as a double value.
-        float timeValue = glfwGetTime();
-        float transitionRatio = std::fmod(timeValue, TRANSITION_DURATION) / TRANSITION_DURATION;
-        float red = 0.95f + (0.98f - 0.95f) * transitionRatio;
-        float green = 0.91f - (0.91f - 0.75f) * transitionRatio;
-        float blue = 0.69f - (0.69f - 0.18f) * transitionRatio;
-
-        // Render.
-        glClearColor(red, green, blue, 1.0f);
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // Draw.
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glDeleteProgram(shaderProgam);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shaderProgram);
+
     glfwTerminate();
     return 0;
 }
@@ -127,7 +142,7 @@ std::string readShaderCode(const std::string& filePath) {
 }
 
 GLuint compileShader(const std::string& shaderCode, GLenum shaderType) {
-    GLUint shader = glCreateShader(shaderType);
+    GLuint shader = glCreateShader(shaderType);
 
     const char* shaderSource = shaderCode.c_str();
     glShaderSource(shader, 1, &shaderSource, nullptr);
@@ -148,19 +163,19 @@ GLuint compileShader(const std::string& shaderCode, GLenum shaderType) {
 }
 
 GLuint createShaderProgram(const std::vector<GLuint>& shaders) {
-    GLuint progam = glCreateProgram();
+    GLuint program = glCreateProgram();
 
     for (const auto& shader: shaders) {
         glAttachShader(program, shader);
     }
-    glLinkProgram(progam);
+    glLinkProgram(program);
 
     // Check if the shader linking process was successful.
-    GLuint success;
-    glGetProgramiv(progam, GL_LINK_STATUS, &success);
+    GLint success;
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
     if (!success) {
-        char infoLong[512];
-        glGetProgramInfoLog(progam, 512, nullptr, infoLog);
+        char infoLog[512];
+        glGetProgramInfoLog(program, 512, nullptr, infoLog);
         std::cout<< "ERROR::SHADER::OBJECT::LINKING_FAILED\n" << infoLog << std::endl;
         glDeleteProgram(program);
         return -1;
