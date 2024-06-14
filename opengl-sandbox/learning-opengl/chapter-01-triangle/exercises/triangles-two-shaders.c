@@ -1,3 +1,7 @@
+/*
+    We will now output the same two triangles but we will use a different shader to make
+    one of the triangles yellow.
+*/
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -28,7 +32,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); needed on macos.
 
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL: 2 VAOs, 2VBOs, 2 fragment shaders", nullptr, nullptr);
     if (window == nullptr) {
         std::cout<< "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -48,25 +52,44 @@ int main() {
     std::string vertexShaderCode = readShaderCode("shader.vert");
     GLuint vertexShader = compileShader(vertexShaderCode, GL_VERTEX_SHADER);
 
-    // Load and compile the fragment shader.
+    // Load and compile the orange fragment shader.
     std::string fragmentShaderCode = readShaderCode("shader.frag");
-    GLuint fragmentShader = compileShader(fragmentShaderCode, GL_FRAGMENT_SHADER);
+    GLuint fragmentShaderOrange = compileShader(fragmentShaderCode, GL_FRAGMENT_SHADER);
+
+    // Load and compile the orange fragment shader.
+    std::string fragmentYellowShaderCode = readShaderCode("shader-yellow.frag");
+    GLuint fragmentShaderYellow = compileShader(fragmentYellowShaderCode, GL_FRAGMENT_SHADER);
 
     // Create and link the shaders to create a shader program.
-    std::vector<GLuint> shaders = {vertexShader, fragmentShader};
-    GLuint shaderProgram = createShaderProgram(shaders);
-    for (const auto& shader: shaders) {
-        glDetachShader(shaderProgram, shader);
+    std::vector<GLuint> shadersOrange = {vertexShader, fragmentShaderOrange};
+    GLuint shaderProgramOrange = createShaderProgram(shadersOrange);
+
+    std::vector<GLuint> shadersYellow = {vertexShader, fragmentShaderYellow};
+    GLuint shaderProgramYellow = createShaderProgram(shadersYellow);
+
+    for (const auto& shader: shadersYellow) {
+        glDetachShader(shaderProgramOrange, shader);
         glDeleteShader(shader);
     }
+    for (const auto& shader: shadersYellow) {
+        glDetachShader(shaderProgramYellow, shader);
+    }
+    glDeleteShader(fragmentShaderYellow); // This is the last one to be deleted.
 
     /*
         Configure vertex attributes.
     */
-    float vertices[] = {
-        -0.5f, -0.5f, 0.0f,  // Left.
-         0.5f, -0.5f, 0.0f,  // Right.
-         0.0f,  0.5f, 0.0f,  // Top.
+    float vertices1[] = {
+        // first triangle
+        -0.9f, -0.5f, 0.0f,  // left 
+        -0.0f, -0.5f, 0.0f,  // right
+        -0.45f, 0.5f, 0.0f,  // top 
+    };
+    float vertices2[] = {
+        // second triangle
+        0.0f, -0.5f, 0.0f,  // left
+        0.9f, -0.5f, 0.0f,  // right
+        0.45f, 0.5f, 0.0f   // top 
     };
 
     /*
@@ -74,27 +97,33 @@ int main() {
         2. Copy our vertices arrays in a buffer for openGL to use.
         3. Then set the vertex attribute pointers.
     */
-    GLuint VAO, VBO;
-    glGenVertexArrays(1, &VAO);
+    GLuint VAO[2], VBO[2];
+    glGenVertexArrays(2, VAO);
+    glGenBuffers(2, VBO);
 
-    glBindVertexArray(VAO);
-
-    glGenBuffers(1, &VBO);
-    // Bind the VBO buffer to the GL_ARRAY_BUFFER target.
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // Copy the vertex data into the buffer.
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
+    glBindVertexArray(VAO[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
     // The call glVertexAttribPointer() registered VBO as the vertex attribute's bound
     // vertex buffer object, so we can safely unbind now.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(VAO[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    // The call glVertexAttribPointer() registered VBO as the vertex attribute's bound
+    // vertex buffer object, so we can safely unbind now.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glEnableVertexAttribArray(0);
 
     // Now we can also unding the VAO so that other VAO calls won't modify this one.
     glBindVertexArray(0);
 
+    // Draw in wireframe polygons.
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     while (!glfwWindowShouldClose(window)) {
         // Process input.
@@ -105,17 +134,23 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Draw.
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
+        glUseProgram(shaderProgramOrange);
+        glBindVertexArray(VAO[0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glUseProgram(shaderProgramYellow);
+        glBindVertexArray(VAO[1]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
+    glDeleteVertexArrays(2, VAO);
+    glDeleteBuffers(2, VBO);
+    glDeleteProgram(shaderProgramOrange);
+    glDeleteProgram(shaderProgramYellow);
 
     glfwTerminate();
     return 0;

@@ -1,3 +1,7 @@
+/*
+    Here we build upon the basic triangle program and now draw 2 triangles
+    next to each other using glDrawArrays() by adding more vertices to our data.
+*/
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -28,7 +32,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); needed on macos.
 
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL: 2 triangles", nullptr, nullptr);
     if (window == nullptr) {
         std::cout<< "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -64,9 +68,14 @@ int main() {
         Configure vertex attributes.
     */
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f,  // Left.
-         0.5f, -0.5f, 0.0f,  // Right.
-         0.0f,  0.5f, 0.0f,  // Top.
+        // first triangle
+        -0.9f, -0.5f, 0.0f,  // left 
+        -0.0f, -0.5f, 0.0f,  // right
+        -0.45f, 0.5f, 0.0f,  // top 
+        // second triangle
+        0.0f, -0.5f, 0.0f,  // left
+        0.9f, -0.5f, 0.0f,  // right
+        0.45f, 0.5f, 0.0f   // top 
     };
 
     /*
@@ -85,6 +94,8 @@ int main() {
     // Copy the vertex data into the buffer.
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    // The second argument, the `size` stays the same since that's the number of components per index.
+    // The stride stays the same ->3 float / vertex.
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -107,7 +118,7 @@ int main() {
         // Draw.
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
