@@ -179,3 +179,11 @@ g++ -o test_glad test_glad.o glad.o -lGL -lglfw3 -lX11 -lpthread -lXrandr -lXi -
 - `lXrandr``: Links against the X11 RandR extension library.
 - `lXi``: Links against the X11 Xinput extension library.
 - `ldl``: Links against the dynamic linking library.
+
+---
+
+## Day to Day
+
+```
+scp -r learning-opengl/ ec2-user@${EC2}:/home/ec2-user/src
+```
