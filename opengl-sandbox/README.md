@@ -192,3 +192,12 @@ or
 ```
 scp -r ec2-user@${EC2}:/home/ec2-user/src/learning-opengl/chapter-01-triangle/shaders_class learning-opengl/chapter-01-triangle/
 ```
+
+But even easier is to do
+```
+rsync -rv learning-opengl ec2-user@${EC2}:/home/ec2-user/src
+```
+and
+```
+rsync -rv ec2-user@${EC2}:/home/ec2-user/src/learning-opengl/ learning-opengl
+```
