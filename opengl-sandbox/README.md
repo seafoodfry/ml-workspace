@@ -187,3 +187,8 @@ g++ -o test_glad test_glad.o glad.o -lGL -lglfw3 -lX11 -lpthread -lXrandr -lXi -
 ```
 scp -r learning-opengl/ ec2-user@${EC2}:/home/ec2-user/src
 ```
+
+or
+```
+scp -r ec2-user@${EC2}:/home/ec2-user/src/learning-opengl/chapter-01-triangle/shaders_class learning-opengl/chapter-01-triangle/
+```

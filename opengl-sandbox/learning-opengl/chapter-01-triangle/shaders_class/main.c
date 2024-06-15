@@ -7,6 +7,8 @@
 #include <vector>
 #include <cmath>
 
+#include "shader.h"
+
 
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
@@ -15,9 +17,7 @@ const float TRANSITION_DURATION = 3.5f; // Duration of the color transition in s
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
-std::string readShaderCode(const std::string& filePath);
-GLuint compileShader(const std::string& shaderCode, GLenum shaderType);
-GLuint createShaderProgram(const std::vector<GLuint>& shaders);
+
 
 
 int main() {
@@ -44,21 +44,8 @@ int main() {
         return -1;
     }
 
-    // Load and compile the vertex shader.
-    std::string vertexShaderCode = readShaderCode("shader.vert");
-    GLuint vertexShader = compileShader(vertexShaderCode, GL_VERTEX_SHADER);
-
-    // Load and compile the fragment shader.
-    std::string fragmentShaderCode = readShaderCode("shader.frag");
-    GLuint fragmentShader = compileShader(fragmentShaderCode, GL_FRAGMENT_SHADER);
-
-    // Create and link the shaders to create a shader program.
-    std::vector<GLuint> shaders = {vertexShader, fragmentShader};
-    GLuint shaderProgram = createShaderProgram(shaders);
-    for (const auto& shader: shaders) {
-        glDetachShader(shaderProgram, shader);
-        glDeleteShader(shader);
-    }
+    // Load, compile the shaders and link them into a shader program.
+    Shader shader = Shader("shader.vert", "shader.frag");
 
     /*
         Configure vertex attributes.
@@ -107,12 +94,20 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Draw.
-        glUseProgram(shaderProgram);
+        shader.use();
 
         float timeValue = glfwGetTime();
-        float green = static_cast<float>((sin(timeValue) / 2.0f) + 0.5f);  // Have the range be [0, 1].
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, green, 0.0f, 1.0f);
+        float redOffset = static_cast<float>((sin(timeValue * M_PI) / 2.0f) + 0.5f);
+        float greenOffset = static_cast<float>((sin(timeValue + 2.0f * M_PI / 3.0f) / 2.0f) + 0.5f);
+        float blueOffset = static_cast<float>((sin(timeValue + 4.0f * M_PI / 3.0f) / 2.0f) + 0.5f);
+        try {
+            shader.setFloat("redOffset", redOffset);
+            shader.setFloat("greenOffset", greenOffset);
+            shader.setFloat("blueOffset", blueOffset);
+        } catch(std::exception& e) {
+            std::cerr << "Error setting color offset values: " << e.what() << std::endl;
+            return -1;
+        }
 
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -123,7 +118,7 @@ int main() {
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
+    // glDeleteProgram(shader.ID); is now done by the Shader destructor.
 
     glfwTerminate();
     return 0;
@@ -138,55 +133,4 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
-}
-
-// Function to read shader code from file.
-std::string readShaderCode(const std::string& filePath) {
-    std::ifstream file(filePath);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
-}
-
-GLuint compileShader(const std::string& shaderCode, GLenum shaderType) {
-    GLuint shader = glCreateShader(shaderType);
-
-    const char* shaderSource = shaderCode.c_str();
-    glShaderSource(shader, 1, &shaderSource, nullptr);
-    glCompileShader(shader);
-
-    // Check if compilation of the vertex shader was successful.
-    GLint success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        char infoLog[512];
-        glGetShaderInfoLog(shader, 512, nullptr, infoLog);
-        std::cout << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-        glDeleteShader(shader);
-        return -1;
-    }
-
-    return shader;
-}
-
-GLuint createShaderProgram(const std::vector<GLuint>& shaders) {
-    GLuint program = glCreateProgram();
-
-    for (const auto& shader: shaders) {
-        glAttachShader(program, shader);
-    }
-    glLinkProgram(program);
-
-    // Check if the shader linking process was successful.
-    GLint success;
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
-        char infoLog[512];
-        glGetProgramInfoLog(program, 512, nullptr, infoLog);
-        std::cout<< "ERROR::SHADER::OBJECT::LINKING_FAILED\n" << infoLog << std::endl;
-        glDeleteProgram(program);
-        return -1;
-    }
-
-    return program;
 }

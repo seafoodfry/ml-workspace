@@ -6,11 +6,12 @@
 #include <string>
 #include <vector>
 
+#include "shader.h"
 
 
-class ShaderReadException : public std::exception {
+class ShaderException : public std::exception {
 public:
-    ShaderReadException(const std::string& message) : m_message(message) {}
+    ShaderException(const std::string& message) : m_message(message) {}
     const char* what() const noexcept override { return m_message.c_str(); }
 
 private:
@@ -39,13 +40,13 @@ std::string readShaderCode(const std::string& filePath) {
             errMsg << "Failed reading shader file: " << filePath << "\n";
         }
         errMsg << "Error Details: " << e.what();
-        throw ShaderReadException(errMsg.str());
+        throw ShaderException(errMsg.str());
     }
     
     return buffer.str();
 }
 
-// compileShader expects the output of readShaderCode as input.
+// compileShader expects the output of readShaderCode() as input.
 GLuint compileShader(const std::string& shaderCode, GLenum shaderType) {
     GLuint shader = glCreateShader(shaderType);
 
@@ -59,37 +60,128 @@ GLuint compileShader(const std::string& shaderCode, GLenum shaderType) {
     if (!success) {
         char infoLog[512];
         glGetShaderInfoLog(shader, 512, nullptr, infoLog);
-        std::cout << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
+
+        std::stringstream errorMsg;
+        errorMsg << "Shader compilation failed:\n";
+        errorMsg << "Shader type: ";
+        switch (shaderType) {
+            case GL_VERTEX_SHADER:
+                errorMsg << "Vertex Shader\n";
+                break;
+            case GL_FRAGMENT_SHADER:
+                errorMsg << "Fragment Shader\n";
+                break;
+            // Add more cases for other shader types if needed.
+            default:
+                errorMsg << "Unknown Shader Type\n";
+                break;
+        }
+        errorMsg << "Error details:\n" << infoLog;
+
         glDeleteShader(shader);
-        return -1;
+        throw ShaderException(errorMsg.str());
     }
 
     return shader;
 }
 
+// createShaderProgram takes as input a vector of outputs from compileShader().
+GLuint createShaderProgram(const std::vector<GLuint>& shaders) {
+    GLuint program = glCreateProgram();
+
+    for (const auto& shader: shaders) {
+        glAttachShader(program, shader);
+    }
+    glLinkProgram(program);
+
+    // Check if the shader linking process was successful.
+    GLint success;
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetProgramInfoLog(program, 512, nullptr, infoLog);
+
+        std::stringstream errMsg;
+        errMsg << "Shader linking failed:\n";
+        errMsg << "Error details:\n" << infoLog;
+
+        glDeleteProgram(program);
+        throw ShaderException(errMsg.str());
+    }
+
+    return program;
+}
+
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath) {
     // Load the shaders.
+    std::string vertexShaderCode, fragmentShaderCode;
     try {
-        std::string vertexShaderCode = readShaderCode(vertexPath);
-        std::string fragmentShaderCode = readShaderCode(fragmentPath);
+        vertexShaderCode = readShaderCode(vertexPath);
+        fragmentShaderCode = readShaderCode(fragmentPath);
 
     } catch (const std::exception& e) {
         std::cerr << "Shader read exception:\n" << e.what() << std::endl;
         throw;
     }
 
-    // Load and compile the vertex shader.
-    GLuint vertexShader = compileShader(vertexShaderCode, GL_VERTEX_SHADER);
+    // Load and compile the shaders.
+    GLuint vertexShader, fragmentShader;
+    try {
+        vertexShader = compileShader(vertexShaderCode, GL_VERTEX_SHADER);
+        fragmentShader = compileShader(fragmentShaderCode, GL_FRAGMENT_SHADER);
 
-    // Load and compile the fragment shader.
-    GLuint fragmentShader = compileShader(fragmentShaderCode, GL_FRAGMENT_SHADER);
+    } catch(std::exception& e) {
+        std::cerr << "Shader compilation exception:\n" << e.what() << std::endl;
+        throw;
+    }
 
     // Create and link the shaders to create a shader program.
     std::vector<GLuint> shaders = {vertexShader, fragmentShader};
-    GLuint shaderProgram = createShaderProgram(shaders);
+    try {
+        ID = createShaderProgram(shaders);
+    } catch(std::exception& e) {
+        std::cerr << "Shader linking exception:\n" << e.what() << std::endl;
+        throw;
+    }
     for (const auto& shader: shaders) {
-        glDetachShader(shaderProgram, shader);
+        glDetachShader(ID, shader);
         glDeleteShader(shader);
     }
+}
+
+Shader::~Shader() {
+    glDeleteProgram(ID);
+}
+
+void Shader::use() {
+    glUseProgram(ID);
+}
+
+GLint Shader::getUniformLocation(const std::string& name) const {
+    GLint location = glGetUniformLocation(ID, name.c_str());
+    if (location == -1) {
+        throw ShaderException("Invalid uniform location: " + name);
+    }
+    return location;
+}
+
+void Shader::setBool(const std::string& name, bool value) const {
+    GLint location = getUniformLocation(name);
+    glUniform1i(location, static_cast<GLint>(value));
+}
+
+void Shader::setInt(const std::string& name, int value) const {
+    GLint location = getUniformLocation(name);
+    glUniform1i(location, static_cast<GLint>(value));
+}
+
+void Shader::setFloat(const std::string& name, float value) const {
+    GLint location = getUniformLocation(name);
+    glUniform1f(location, value);
+}
+
+void Shader::setFloat4f(const std::string& name, float val1, float val2, float val3, float val4) const {
+    GLint location = getUniformLocation(name);
+    glUniform4f(location, val1, val2, val3, val4);
 }
