@@ -195,9 +195,9 @@ scp -r ec2-user@${EC2}:/home/ec2-user/src/learning-opengl/chapter-01-triangle/sh
 
 But even easier is to do
 ```
-rsync -rv learning-opengl ec2-user@${EC2}:/home/ec2-user/src
+rsync -rvzP learning-opengl ec2-user@${EC2}:/home/ec2-user/src
 ```
 and
 ```
-rsync -rv ec2-user@${EC2}:/home/ec2-user/src/learning-opengl/ learning-opengl
+rsync -rvzP ec2-user@${EC2}:/home/ec2-user/src/learning-opengl/ learning-opengl
 ```
