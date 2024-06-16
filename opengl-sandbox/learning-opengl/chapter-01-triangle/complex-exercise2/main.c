@@ -52,9 +52,9 @@ int main() {
     */
    float vertices[] = {
         // positions         // colors
-         0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right.
-        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left.
-         0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top.
+         0.35f, -0.35f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right.
+        -0.35f, -0.35f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left.
+         0.0f,  0.35f, 0.0f,  0.0f, 0.0f, 1.0f   // top.
     };
 
     /*
@@ -87,18 +87,26 @@ int main() {
     // Create a random number engine.
     std::random_device rd; // obtain a random number from hardware.
     std::mt19937 rng(rd()); // seed the generator.
-    std::uniform_real_distribution<float> distrPos(0.0f, 0.01f);
-    std::uniform_real_distribution<float> distrNeg(-0.01f, 0.0f);
-    std::uniform_real_distribution<float> distr(-0.01f, 0.01f);
+    const float stepSize = 0.0005f;
+    const float minStepSize = stepSize / 10.0;
+    std::uniform_real_distribution<float> distrPos(minStepSize, stepSize);
+    std::uniform_real_distribution<float> distrNeg(-stepSize, -minStepSize);
+    std::uniform_real_distribution<float> distr(-stepSize, stepSize);
     //std::uniform_int_distribution<> distr(0, 2); // define the range.
 
-    float stepY = distr(rng);
-    float stepX = distr(rng);
+    float stepY = distrPos(rng);
+    float stepX = distrPos(rng);
+    float stepZ = distrPos(rng);
 
     float topPosY = vertices[13];
     float leftPosY = vertices[7];
     float leftPosX = vertices[6];
     float rightPosX = vertices[0];
+    float topPosZ = vertices[14];
+
+    float totalDisplacementX = 0.0;
+    float totalDisplacementY = 0.0;
+    float totalDisplacementZ = 0.0;
 
     while (!glfwWindowShouldClose(window)) {
         // Process input.
@@ -124,34 +132,42 @@ int main() {
             return -1;
         }
 
-        // Check if top vertex is going out of bounds, if so generate a new value for stepY
-        // that is negative. Also generate a new stepX.
-        if (topPosY + stepY >= 1.0) {
+        // Check if top is going out of bounds through the front.
+        float futureDistZ = topPosZ + totalDisplacementZ + stepZ;
+        if (futureDistZ >= 1.0) {
+            stepZ = distrNeg(rng);
+            std::cout << " future dist Z: " << futureDistZ << ", new stepZ: " << stepZ << std::endl;
+        }
+        // Check if top is going out of bounds through the back.
+        if (futureDistZ <= -1.0) {
+            stepZ = distrPos(rng);
+            std::cout << " future dist Z: " << futureDistZ << ", new stepZ: " << stepZ << std::endl;
+        }
+
+        // Check if top vertex is going out of bounds through the top.
+        if ((topPosY + totalDisplacementY + stepY) >= 1.0) {
             stepY = distrNeg(rng);
-            stepX = distr(rng);
         }
-        // On the other hand, if the bottom left vertex is going out of bounds from below, then
-        // generate a new value for stepY in the positive direction. Also generate a new stepX.
-        if (leftPosY + stepY <= -1.0) {
+        // On the other hand, if the bottom left vertex is going out of bounds from below.
+        if ((leftPosY + totalDisplacementY + stepY) <= -1.0) {
             stepY = distrPos(rng);
-            stepX = distr(rng);
         }
-        // If the left vertex is going out of bounds from the left, then generate a new positive
-        // value for stepX and a new stepY.
-        if (leftPosX + stepX <= -1.0) {
+        // If the left vertex is going out of bounds from the left.
+        if ((leftPosX + totalDisplacementX + stepX) <= -1.0) {
             stepX = distrPos(rng);
-            stepY = distr(rng);
         }
-        // Finally, if the right vertes is going out of bounds from the right, then generate a new
-        // stepX is the negative direction and a new stepY.
-        if (rightPosX + stepX >= 1.0) {
+        // Finally, if the right vertes is going out of bounds from the right.
+        if ((rightPosX + totalDisplacementX + stepX) >= 1.0) {
             stepX = distrNeg(rng);
-            stepY = distr(rng);
         }
     
         try {
-            float randomZ = 0.0;
-            shader.setFloat3f("displacement", stepX, stepY, randomZ);
+            //std::cout << " +: " << stepX << ", " << stepY  << ", " << stepZ << std::endl;
+            //std::cout << " d: " << totalDisplacementX << ", " << totalDisplacementY  << ", " << totalDisplacementZ << std::endl;
+            totalDisplacementX += stepX;
+            totalDisplacementY += stepY;
+            totalDisplacementZ += stepZ;
+            shader.setFloat3f("displacement", totalDisplacementX, totalDisplacementY, totalDisplacementZ);
         } catch (const std::exception& e) {
             std::cerr << "Error setting 'displacement' uniform: " << e.what() << std::endl;
             return -1;
