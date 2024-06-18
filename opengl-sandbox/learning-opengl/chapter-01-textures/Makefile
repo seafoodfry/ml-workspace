@@ -4,13 +4,15 @@ CC := g++
 # -Wall turns on most compiler warnings
 # -Wextra https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wextra
 # -Werror Make all warnings into errors. 
-CFLAGS := -g -O2 -Wall -Wextra -Wshadow -Werror -std=c++17 -I./../../glad/include #-std=gnu++latest # std=c++20 -std=c++17 -std=c++14 -std=c++11
+GLAD_LIB := ./../glad
+CFLAGS := -g -O2 -Wall -Wextra -Wshadow -Werror -std=c++17 -I$(GLAD_LIB)/include -I./../include/nothings-stb #-std=gnu++latest # std=c++20 -std=c++17 -std=c++14 -std=c++11
 LFLAGS := -lGL -lglfw3 -lX11 -lpthread -lXrandr -lXi -ldl
 
 TARGET = main.out
 SOURCES = $(wildcard *.c)
-GLAD_SOURCE = ./../../glad/src/glad.c
-OBJECTS = $(SOURCES:.c=.o) $(GLAD_SOURCE:.c=.o)
+GLAD_SOURCE = $(GLAD_LIB)/src/glad.c
+GLAD_OBJ := $(notdir $(GLAD_SOURCE:.c=.o))
+OBJECTS = $(SOURCES:.c=.o) $(GLAD_OBJ)
 
 
 # Rule to link the program.
@@ -26,7 +28,7 @@ $(TARGET): $(OBJECTS)
 %.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.o: $(GLAD_SOURCE)
+$(GLAD_OBJ): $(GLAD_SOURCE)
 	$(CC) $(CFLAGS) -c $< -o $(notdir $@)
 
 clean:
