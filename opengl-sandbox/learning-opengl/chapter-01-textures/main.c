@@ -16,12 +16,18 @@
 
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
-const char* textureImagePath = "./../resources/textures/container.jpg";
+
+constexpr GLuint NUM_TEXTURES = 2;
+const char* textureImagePaths[NUM_TEXTURES] = {
+    "./../resources/textures/container.jpg",
+    "./../resources/textures/awesomeface.png"
+};
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
-
+void setupTexture(GLuint texture);
+bool loadTexture(GLuint texture, const char* textureImagePath, bool flipVertically);
 
 
 int main() {
@@ -103,27 +109,22 @@ int main() {
 
 
     // Load and create the texture.
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    GLuint textures[NUM_TEXTURES];
+    glGenTextures(NUM_TEXTURES, textures);
 
-    // Load image, create a texture, and generate mipmaps.
-    int width, height, nrChannels;
-    unsigned char* data = stbi_load(textureImagePath, &width, &height, &nrChannels, 0);
-    if (!data) {
-        std::cerr << "Failed to load texture image: " << textureImagePath << std::endl;
+    setupTexture(textures[0]);
+    if (!loadTexture(textures[0], textureImagePaths[0], false)) {
         return -1;
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(data);
+    setupTexture(textures[1]);
+    if (!loadTexture(textures[1], textureImagePaths[1], true)) {
+        return -1;
+    }
 
+
+    shader.use();
+    shader.setInt("texture0", 0);
+    shader.setInt("texture1", 1);
     while (!glfwWindowShouldClose(window)) {
         // Process input.
         processInput(window);
@@ -133,9 +134,12 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Draw.
-        shader.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textures[0]);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, textures[1]);
 
-        glBindTexture(GL_TEXTURE, texture);
+        shader.use();
         glBindVertexArray(VAO);
 
         //glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -162,4 +166,34 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
+}
+
+void setupTexture(GLuint texture) {
+    glBindTexture(GL_TEXTURE_2D, texture);
+    // set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+bool loadTexture(GLuint texture, const char* textureImagePath, bool flipVertically) {
+    // Load image, create a texture, and generate mipmaps.
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(flipVertically);
+    unsigned char* data = stbi_load(textureImagePath, &width, &height, &nrChannels, 0);
+    if (!data) {
+        std::cerr << "Failed to load texture image: " << textureImagePath << std::endl;
+        return false;
+    }
+
+    GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(data);
+
+    return true;
 }
