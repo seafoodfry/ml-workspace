@@ -29,7 +29,7 @@ struct  CPUBitmap {
     long image_size(void) const { return x*y*4; }
 
     // Static method used for glut callbacks.
-    const CPUBitmap** get_bitmap_ptr(void) {
+    static CPUBitmap** get_bitmap_ptr(void) {
         // When a variable is declared as static inside a function, it retains its value between function
         // calls. This means that the variable is initialized only once (the first time the function is
         // called) and retains its value across subsequent calls to the function.
@@ -46,8 +46,10 @@ struct  CPUBitmap {
         *bitmap = this;
         bitmapExit = e;
 
-        glutInit();
-        glutInitDisplayMode( GLUT_SINGLE | GLUT_RGBA );
+        int argc = 1;
+        char *argv[1] = {(char*)"Something"};
+        glutInit(&argc, argv);
+        glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
         glutInitWindowSize(x, y);
         glutCreateWindow("bitmap");
         glutKeyboardFunc(Key);
@@ -58,18 +60,19 @@ struct  CPUBitmap {
     /* Static methods used for glut callbacks. */
     static void Key(unsigned char key, int x, int y) {
         switch (key) {
-        case 27:
-            CPUBitmap* bitmap = *(get_bitmap_ptr());
-            if (bitmap->dataBlock != NULL && bitmap->bitmapExit != NULL) {
-                bitmap->bitmapExit(bitmap->dataBlock);
-            }
-            exit(0);
+            case 27:
+                CPUBitmap* bitmap = *(get_bitmap_ptr());
+                if (bitmap->dataBlock != NULL && bitmap->bitmapExit != NULL) {
+                    bitmap->bitmapExit(bitmap->dataBlock);
+                }
+                exit(0);
+        }
     }
 
     static void Draw(void) {
         CPUBitmap* bitmap = *(get_bitmap_ptr());
         glClearColor(0.0, 0.0, 0.0, 1.0);
-        glClear(GL_COLOR_BUFFET_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
         glDrawPixels(bitmap->x, bitmap->y, GL_RGBA, GL_UNSIGNED_BYTE, bitmap->pixels);
         glFlush();
     }
