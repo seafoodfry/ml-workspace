@@ -212,6 +212,14 @@ scp ubuntu@${EC2}:/home/ubuntu/Animations-101.ipynb .
 ```
 
 
+But even easier is to do
+```
+rsync -rvzP our-cuda-by-example ec2-user@${EC2}:/home/ec2-user/src
+```
+and
+```
+rsync -rvzP ec2-user@${EC2}:/home/ec2-user/src/our-cuda-by-example/ our-cuda-by-example
+```
 
 ---
 
