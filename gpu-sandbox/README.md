@@ -163,6 +163,45 @@ We ended up going with
 Note that we chose an Amazon Linux 2 AMI for compatibility with our GPU instances.
 
 
+
+### Finding a Windows GPU AMI
+
+We found the following AMIs using the EC2 launch wizard: turns out that the secret is to search the marketplace, search for whatever you want, click select, and then "subscribe on instance launch".
+Once you do that the AMIs will show themselves.
+
+NICE DCV for Windows (g4 and g5 with NVIDIA gaming driver)
+```
+DCV-Windows-2023.1.16388-NVIDIA-gaming-555.99-2024-06-14T21-47-06.900Z
+ami-0871751821043a991
+```
+
+NVIDIA CloudXR AMI Introductory Offer
+```
+vgpu17.2-nv-windows-server-2022-vWS-552.55-v202406060040-prod-77u2eeb33lmrm
+ami-0d1f7ef5b24e3fc8a
+```
+
+NVIDIA RTX Virtual Workstation - WinServer 2022
+```
+vgpu17.2-nv-windows-server-2022-vWS-552.55-v202406060040-prod-77u2eeb33lmrm
+ami-0d1f7ef5b24e3fc8a
+```
+
+
+Microsoft Windows Server 2019 with NVIDIA GRID Driver
+```
+Windows_Server-2019-English-Full-G3-2024.06.13-b6156132-9d29-4061-9e84-fc9f8357376c
+ami-09d27e664fc45deff
+```
+
+
+Microsoft Windows Server 2019 with NVIDIA Tesla Driver
+```
+Windows_Server-2019-English-Tesla-2024.06.13
+ami-026433ab26d8782d3
+```
+
+
 ### Running the GPU
 
 
