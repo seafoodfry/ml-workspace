@@ -175,18 +175,6 @@ DCV-Windows-2023.1.16388-NVIDIA-gaming-555.99-2024-06-14T21-47-06.900Z
 ami-0871751821043a991
 ```
 
-NVIDIA CloudXR AMI Introductory Offer
-```
-vgpu17.2-nv-windows-server-2022-vWS-552.55-v202406060040-prod-77u2eeb33lmrm
-ami-0d1f7ef5b24e3fc8a
-```
-
-NVIDIA RTX Virtual Workstation - WinServer 2022
-```
-vgpu17.2-nv-windows-server-2022-vWS-552.55-v202406060040-prod-77u2eeb33lmrm
-ami-0d1f7ef5b24e3fc8a
-```
-
 
 Microsoft Windows Server 2019 with NVIDIA GRID Driver
 ```
