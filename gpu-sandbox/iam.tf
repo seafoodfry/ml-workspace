@@ -22,7 +22,7 @@ resource "aws_iam_instance_profile" "dcv" {
 
 data "aws_iam_policy_document" "dcv" {
   statement {
-    actions = ["s3:GetObject"]
+    actions   = ["s3:GetObject"]
     resources = ["arn:aws:s3:::dcv-license.${data.aws_region.current.name}/*"]
     effect    = "Allow"
   }

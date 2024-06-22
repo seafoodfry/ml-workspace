@@ -4,6 +4,6 @@ output "public_dns" {
 }
 
 output "instance_id" {
-  value = aws_instance.ec2.id
+  value       = aws_instance.ec2.id
   description = "Instance ID"
 }

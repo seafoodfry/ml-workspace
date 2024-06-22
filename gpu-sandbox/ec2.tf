@@ -5,131 +5,53 @@ locals {
   }
 }
 
-resource "aws_instance" "gpu" {
-  count = var.gpus
+# module "linux_vanilla" {
+#   count  = 0
+#   source = "../modules/ec2s/linux/vanilla"
 
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      max_price = "0.6" # https://aws.amazon.com/ec2/spot/pricing/
-    }
-  }
+#   name              = "dev"
+#   ami               = "ami-04064f2a9939d4f29"
+#   type              = "t3.xlarge"
+#   security_group_id = aws_security_group.ssh.id
+#   subnet_id         = module.vpc.public_subnets[0]
+#   ec2_key_name      = var.ec2_key_name
 
-  ami           = "ami-0c4b8684fc96c1de0"
-  instance_type = "g4dn.xlarge"
+#   instance_profile_name = aws_iam_instance_profile.dcv.name
+# }
+# output "linux_vanilla_dns" {
+#   value       = module.linux_vanilla[*].public_dns
+#   description = "Public dev DNS"
+# }
 
-  associate_public_ip_address = true
-  vpc_security_group_ids      = [aws_security_group.ssh.id]
-  subnet_id                   = module.vpc.public_subnets[0]
-  key_name                    = var.ec2_key_name
-  root_block_device {
-    delete_on_termination = true
-    encrypted             = true
-    volume_type           = "gp3"
-    volume_size           = 135
-  }
-  metadata_options {
-    http_tokens = "required"
-    http_put_response_hop_limit = 1
-  }
+module "linux_gpu" {
+  count  = 0
+  source = "../modules/ec2s/linux/gpu"
 
-  iam_instance_profile = aws_iam_instance_profile.dcv.name
-  user_data = base64encode(templatefile("${path.module}/gpu-setup.sh.tpl", local.vars))
-
-  tags = {
-    Name = "gpu-opengl"
-  }
+  name                  = "linux-gpu"
+  ami                   = "ami-0c4b8684fc96c1de0"
+  type                  = "g4dn.xlarge"
+  security_group_id     = aws_security_group.ssh.id
+  subnet_id             = module.vpc.public_subnets[0]
+  ec2_key_name          = var.ec2_key_name
+  instance_profile_name = aws_iam_instance_profile.dcv.name
+}
+output "linux_gpu_dns" {
+  value       = module.linux_gpu[*].public_dns
+  description = "Public linux GPU DNS"
 }
 
-output "public_gpu_dns" {
-  value       = aws_instance.gpu[*].public_dns
-  description = "Public GPUs DNS"
+module "windows_gpu" {
+  count  = 1
+  source = "../modules/ec2s/windows/gpu"
+
+  name              = "windows-gpu"
+  ami               = "ami-026433ab26d8782d3"
+  type              = "g4dn.xlarge"
+  security_group_id = aws_security_group.rdp.id
+  subnet_id         = module.vpc.public_subnets[0]
+  ec2_key_name      = var.ec2_key_name
 }
-
-
-resource "aws_instance" "dev" {
-  count = var.dev_machines
-
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      max_price = "0.6" # https://aws.amazon.com/ec2/spot/pricing/
-    }
-  }
-
-  ami           = "ami-04064f2a9939d4f29"
-  instance_type = "t3.xlarge"
-
-  associate_public_ip_address = true
-  vpc_security_group_ids      = [aws_security_group.ssh.id]
-  subnet_id                   = module.vpc.public_subnets[0]
-  key_name                    = var.ec2_key_name
-  root_block_device {
-    delete_on_termination = true
-    encrypted             = true
-    volume_type           = "gp3"
-    volume_size           = 135
-  }
-  metadata_options {
-    http_tokens = "required"
-    http_put_response_hop_limit = 1
-  }
-
-  user_data = base64encode(templatefile("${path.module}/dev-setup.sh.tpl", local.vars))
-
-  tags = {
-    Name = "dev-opengl"
-  }
-}
-
-output "public_dev_dns" {
-  value       = aws_instance.dev[*].public_dns
-  description = "Public dev DNS"
-}
-
-
-resource "aws_instance" "windows_gpu" {
-  count = var.windows_gpu_machines
-
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      max_price = "0.6" # https://aws.amazon.com/ec2/spot/pricing/
-    }
-  }
-
-  ami           = "ami-026433ab26d8782d3"
-  instance_type = "g4dn.xlarge"
-
-  associate_public_ip_address = true
-  vpc_security_group_ids      = [aws_security_group.rdp[0].id]
-  subnet_id                   = module.vpc.public_subnets[0]
-  key_name                    = var.ec2_key_name
-  root_block_device {
-    delete_on_termination = true
-    encrypted             = true
-    volume_type           = "gp3"
-    volume_size           = 135
-  }
-  metadata_options {
-    http_tokens = "required"
-    http_put_response_hop_limit = 1
-  }
-
-  get_password_data = true
-  iam_instance_profile = aws_iam_instance_profile.dcv.name
-
-  tags = {
-    Name = "windows-gpu-opengl"
-  }
-}
-
-output "public_windows_gpu_dns" {
-  value       = aws_instance.windows_gpu[*].public_dns
-  description = "Public GPUs DNS"
-}
-
 output "windows_gpu_ids" {
-  value = aws_instance.windows_gpu[*].id
-  description = "Instance IDs for the windows GPU machines"
+  value       = module.windows_gpu[*].instance_id
+  description = "Public windows GPU IDs"
 }

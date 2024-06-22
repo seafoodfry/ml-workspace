@@ -3,7 +3,7 @@ variable "name" {
 }
 
 variable "spot_max_price" {
-  type = string
+  type    = string
   default = "0.6" # https://aws.amazon.com/ec2/spot/pricing/
 }
 
@@ -24,11 +24,11 @@ variable "subnet_id" {
 }
 
 variable "ec2_key_name" {
-  type    = string
+  type = string
 }
 
 variable "volume_size" {
-  type = number
+  type    = number
   default = 135
 }
 

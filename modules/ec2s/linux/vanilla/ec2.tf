@@ -29,12 +29,12 @@ resource "aws_instance" "ec2" {
   }
 
   metadata_options {
-    http_tokens = "required"
+    http_tokens                 = "required"
     http_put_response_hop_limit = 1
   }
 
   iam_instance_profile = var.instance_profile_name
-  user_data = base64encode(templatefile("${path.module}/setup.sh.tpl", local.vars))
+  user_data            = base64encode(templatefile("${path.module}/setup.sh.tpl", local.vars))
 
   tags = {
     Name = var.name

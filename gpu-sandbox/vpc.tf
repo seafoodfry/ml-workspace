@@ -16,7 +16,7 @@ module "vpc" {
 }
 
 resource "aws_security_group" "ssh" {
-  name        = "ssh-opengl"
+  name        = "ssh"
   description = "Allow SSH from a specific IP"
   vpc_id      = module.vpc.vpc_id
 
@@ -46,9 +46,7 @@ resource "aws_security_group" "ssh" {
 
 
 resource "aws_security_group" "rdp" {
-  count = var.windows_gpu_machines > 0 ? 1 : 0
-  
-  name        = "rdp-opengl"
+  name        = "rdp"
   description = "Allow RDP from a specific IP"
   vpc_id      = module.vpc.vpc_id
 
