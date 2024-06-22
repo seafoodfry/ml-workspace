@@ -1,1 +1,0 @@
-OmnidirectionalShadowMapping.exe -shadowmapformat i32pd -shadowmapsize 512

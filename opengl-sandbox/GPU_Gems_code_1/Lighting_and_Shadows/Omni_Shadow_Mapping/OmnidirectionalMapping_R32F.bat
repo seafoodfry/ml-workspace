@@ -1,1 +1,0 @@
-OmnidirectionalShadowMapping.exe -shadowmapformat f32 -shadowmapsize 1024

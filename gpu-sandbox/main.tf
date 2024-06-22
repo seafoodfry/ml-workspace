@@ -3,7 +3,7 @@ terraform {
     bucket = "seafoodfry-tf-backend"
     key    = "gpu-sandbox"
     region = "us-east-2"
-    }
+  }
 
   required_providers {
     aws = {
