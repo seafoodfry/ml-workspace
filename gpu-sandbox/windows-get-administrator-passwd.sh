@@ -8,7 +8,7 @@ export KEY="op://Private/SSH Key - numerical recipies/private key"
 secure_delete() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
-        dd if=/dev/urandom of="$1" bs=1m count=1 2>/dev/null
+        dd if=/dev/urandom of="$1" bs=1m count=3 2>/dev/null
         rm -P "$1"
         echo "Deleted: $1"
     else
@@ -17,7 +17,7 @@ secure_delete() {
             shred -u "$1"
             echo "Deleted: $1"
         else
-            dd if=/dev/urandom of="$1" bs=1M count=1 2>/dev/null
+            dd if=/dev/urandom of="$1" bs=1M count=3 2>/dev/null
             rm -f "$1"
             echo "Deleted: $1"
         fi
@@ -37,6 +37,7 @@ SSH_KEY=$(op read "${KEY}")
 TEMP_KEY_FILE=$(mktemp)
 # Ensure the file is removed on script exit
 trap 'secure_delete "$TEMP_KEY_FILE"' EXIT
+echo "Created: $TEMP_KEY_FILE"
 
 # Write the key to the temporary file
 echo "$SSH_KEY" > "$TEMP_KEY_FILE"

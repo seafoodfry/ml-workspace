@@ -24,7 +24,7 @@ locals {
 # }
 
 module "linux_gpu" {
-  count  = 0
+  count  = 1
   source = "../modules/ec2s/linux/gpu"
 
   name                  = "linux-gpu"
