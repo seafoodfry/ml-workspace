@@ -90,7 +90,7 @@ and found this candidate
 
 ### Finding a Non-GPU AMI
 
-Following the procedure outlined below, we saw the AMI `ami-0ca2e925753ca2fb4` as one of the recommende
+Following the procedure outlined below, we saw the AMI `ami-0ca2e925753ca2fb4` as one of the recommended
 AMIs when trying to launch an EC2 from the console.
 Running
 

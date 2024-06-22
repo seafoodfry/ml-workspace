@@ -159,7 +159,7 @@ And create a session.
 dcv create-session dcvdemo
 ```
 
-At thsi point we are ready to use NICE DCV.
+At this point we are ready to use NICE DCV.
 
 
 [github.com/Dav1dde/glad](https://github.com/Dav1dde/glad)
