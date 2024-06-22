@@ -90,7 +90,7 @@ and found this candidate
 
 ### Finding a Non-GPU AMI
 
-Following the procedure outlined below, we saw the AMI `ami-0ca2e925753ca2fb4` as one of the recommende
+Following the procedure outlined below, we saw the AMI `ami-0ca2e925753ca2fb4` as one of the recommended
 AMIs when trying to launch an EC2 from the console.
 Running
 
@@ -173,18 +173,6 @@ NICE DCV for Windows (g4 and g5 with NVIDIA gaming driver)
 ```
 DCV-Windows-2023.1.16388-NVIDIA-gaming-555.99-2024-06-14T21-47-06.900Z
 ami-0871751821043a991
-```
-
-NVIDIA CloudXR AMI Introductory Offer
-```
-vgpu17.2-nv-windows-server-2022-vWS-552.55-v202406060040-prod-77u2eeb33lmrm
-ami-0d1f7ef5b24e3fc8a
-```
-
-NVIDIA RTX Virtual Workstation - WinServer 2022
-```
-vgpu17.2-nv-windows-server-2022-vWS-552.55-v202406060040-prod-77u2eeb33lmrm
-ami-0d1f7ef5b24e3fc8a
 ```
 
 
