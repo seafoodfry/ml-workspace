@@ -1,7 +1,7 @@
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
-  name = "nr"
+  name = "opengl"
   cidr = "10.0.0.0/16"
 
   azs             = ["us-east-2a", "us-east-2b", "us-east-2c"]
@@ -16,7 +16,7 @@ module "vpc" {
 }
 
 resource "aws_security_group" "ssh" {
-  name        = "ssh"
+  name        = "ssh-opengl"
   description = "Allow SSH from a specific IP"
   vpc_id      = module.vpc.vpc_id
 
@@ -24,6 +24,38 @@ resource "aws_security_group" "ssh" {
     description = "SSH"
     from_port   = 22
     to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["${var.my_ip}/32"]
+  }
+  ingress {
+    description = "DCV"
+    from_port   = 8443
+    to_port     = 8443
+    protocol    = "tcp"
+    cidr_blocks = ["${var.my_ip}/32"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+}
+
+
+resource "aws_security_group" "rdp" {
+  count = var.windows_gpu_machines > 0 ? 1 : 0
+  
+  name        = "rdp-opengl"
+  description = "Allow RDP from a specific IP"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    description = "RDP"
+    from_port   = 3389
+    to_port     = 3389
     protocol    = "tcp"
     cidr_blocks = ["${var.my_ip}/32"]
   }
