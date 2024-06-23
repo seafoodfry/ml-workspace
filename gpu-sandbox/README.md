@@ -35,6 +35,13 @@ ami-026433ab26d8782d3
 ```
 
 
+For non-GPU AMIs we did
+
+```
+./run-cmd-in-shell.sh aws ec2 describe-images --owner amazon --filters "Name=platform,Values=windows" "Name=architecture,Values=x86_64" "Name=creation-date,Values=2024-06*" "Name=description,Values=*Windows Server*" "Name=name,Values=*English*" --query 'Images[?!contains(Description, `"2016"`) && !contains(Description, `SQL`) && !contains(Description, `EKS`) && !contains(Description, `ECS`) ]' > out.json
+```
+
+
 ### Running the GPU
 
 
@@ -124,4 +131,56 @@ ls -l@
 And we removed it the following command
 ```
 xattr -r -d com.apple.quarantine cuda_by_example
+```
+
+
+
+---
+
+## PowerShell
+
+[Chocolatey installation docs](https://chocolatey.org/install)
+
+```
+Get-ExecutionPolicy
+```
+
+
+```
+Set-ExecutionPolicy RemoteSigned -Scope Process -Force
+```
+or
+```
+Set-ExecutionPolicy AllSigned -Scope Process -Force
+```
+
+[SecurityProtocolType Enum](https://learn.microsoft.com/en-us/dotnet/api/system.net.securityprotocoltype?view=net-8.0)
+
+```
+Set-ExecutionPolicy Bypass -Scope Process -Force;
+
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
+
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+```
+
+
+
+
+```
+# Set execution policy to allow script execution
+Set-ExecutionPolicy Bypass -Scope Process -Force
+
+# Install Chocolatey package manager
+iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+# Refresh environment variables
+refreshenv
+
+# Install Visual Studio Code
+choco install vscode -y
+
+# Install MinGW-w64 (GCC for Windows)
+choco install mingw -y
+
 ```
