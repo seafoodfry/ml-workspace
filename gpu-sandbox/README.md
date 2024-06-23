@@ -35,6 +35,13 @@ ami-026433ab26d8782d3
 ```
 
 
+For non-GPU AMIs we did
+
+```
+./run-cmd-in-shell.sh aws ec2 describe-images --owner amazon --filters "Name=platform,Values=windows" "Name=architecture,Values=x86_64" "Name=creation-date,Values=2024-06*" "Name=description,Values=*Windows Server*" "Name=name,Values=*English*" --query 'Images[?!contains(Description, `"2016"`) && !contains(Description, `SQL`) && !contains(Description, `EKS`) && !contains(Description, `ECS`) ]' > out.json
+```
+
+
 ### Running the GPU
 
 
@@ -125,3 +132,18 @@ And we removed it the following command
 ```
 xattr -r -d com.apple.quarantine cuda_by_example
 ```
+
+
+
+---
+
+## Windows Tips
+
+The log file for EC2Launch is `C:\ProgramData\Amazon\EC2-Windows\Launch\Log\UserdataExecution.log`.
+The log file for EC2Launch v2 is `C:\ProgramData\Amazon\EC2Launch\log\agent.log`.
+
+[How Amazon EC2 handles user data for Windows instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#ec2-windows-user-data)
+outlines how you may go about accessing these log files.
+
+We actually found the userdata execution log in
+`C:\ProgramData\Amazon\EC2-Windows\Launch\Log\UserdataExecution.log`.

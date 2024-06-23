@@ -24,7 +24,7 @@ locals {
 # }
 
 module "linux_gpu" {
-  count  = 1
+  count  = 0
   source = "../modules/ec2s/linux/gpu"
 
   name                  = "linux-gpu"
@@ -44,12 +44,18 @@ module "windows_gpu" {
   count  = 1
   source = "../modules/ec2s/windows/gpu"
 
-  name              = "windows-gpu"
-  ami               = "ami-026433ab26d8782d3"
-  type              = "g4dn.xlarge"
+  name = "windows-gpu"
+  #ami               = "ami-026433ab26d8782d3"  # GPU
+  #type              = "g4dn.xlarge"
+  ami               = "ami-0aa76edf764a3a139" # Non-GPU
+  type              = "t3.xlarge"
   security_group_id = aws_security_group.rdp.id
   subnet_id         = module.vpc.public_subnets[0]
   ec2_key_name      = var.ec2_key_name
+}
+output "windows_gpu_dns" {
+  value       = module.windows_gpu[*].public_dns
+  description = "Public windows GPU DNS"
 }
 output "windows_gpu_ids" {
   value       = module.windows_gpu[*].instance_id

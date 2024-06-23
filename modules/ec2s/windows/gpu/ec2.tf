@@ -34,6 +34,7 @@ resource "aws_instance" "ec2" {
   }
 
   get_password_data = true
+  user_data         = base64encode(templatefile("${path.module}/setup.ps1", local.vars))
 
   tags = {
     Name = var.name
