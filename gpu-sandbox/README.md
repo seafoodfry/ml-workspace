@@ -137,50 +137,13 @@ xattr -r -d com.apple.quarantine cuda_by_example
 
 ---
 
-## PowerShell
+## Windows Tips
 
-[Chocolatey installation docs](https://chocolatey.org/install)
+The log file for EC2Launch is `C:\ProgramData\Amazon\EC2-Windows\Launch\Log\UserdataExecution.log`.
+The log file for EC2Launch v2 is `C:\ProgramData\Amazon\EC2Launch\log\agent.log`.
 
-```
-Get-ExecutionPolicy
-```
+[How Amazon EC2 handles user data for Windows instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#ec2-windows-user-data)
+outlines how you may go about accessing these log files.
 
-
-```
-Set-ExecutionPolicy RemoteSigned -Scope Process -Force
-```
-or
-```
-Set-ExecutionPolicy AllSigned -Scope Process -Force
-```
-
-[SecurityProtocolType Enum](https://learn.microsoft.com/en-us/dotnet/api/system.net.securityprotocoltype?view=net-8.0)
-
-```
-Set-ExecutionPolicy Bypass -Scope Process -Force;
-
-[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
-
-iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-```
-
-
-
-
-```
-# Set execution policy to allow script execution
-Set-ExecutionPolicy Bypass -Scope Process -Force
-
-# Install Chocolatey package manager
-iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-
-# Refresh environment variables
-refreshenv
-
-# Install Visual Studio Code
-choco install vscode -y
-
-# Install MinGW-w64 (GCC for Windows)
-choco install mingw -y
-
-```
+We actually found the userdata execution log in
+`C:\ProgramData\Amazon\EC2-Windows\Launch\Log\UserdataExecution.log`.
