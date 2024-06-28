@@ -5,23 +5,23 @@ locals {
   }
 }
 
-# module "linux_vanilla" {
-#   count  = 0
-#   source = "../modules/ec2s/linux/vanilla"
+module "linux_vanilla" {
+  count  = 1
+  source = "../modules/ec2s/linux/vanilla"
 
-#   name              = "dev"
-#   ami               = "ami-04064f2a9939d4f29"
-#   type              = "t3.xlarge"
-#   security_group_id = aws_security_group.ssh.id
-#   subnet_id         = module.vpc.public_subnets[0]
-#   ec2_key_name      = var.ec2_key_name
+  name              = "dev"
+  ami               = "ami-04064f2a9939d4f29"
+  type              = "t3.xlarge"
+  security_group_id = aws_security_group.ssh.id
+  subnet_id         = module.vpc.public_subnets[0]
+  ec2_key_name      = var.ec2_key_name
 
-#   instance_profile_name = aws_iam_instance_profile.dcv.name
-# }
-# output "linux_vanilla_dns" {
-#   value       = module.linux_vanilla[*].public_dns
-#   description = "Public dev DNS"
-# }
+  instance_profile_name = aws_iam_instance_profile.dcv.name
+}
+output "linux_vanilla_dns" {
+  value       = module.linux_vanilla[*].public_dns
+  description = "Public dev DNS"
+}
 
 module "linux_gpu" {
   count  = 0
@@ -41,7 +41,7 @@ output "linux_gpu_dns" {
 }
 
 module "windows_gpu" {
-  count  = 1
+  count  = 0
   source = "../modules/ec2s/windows/gpu"
 
   name = "windows-gpu"
