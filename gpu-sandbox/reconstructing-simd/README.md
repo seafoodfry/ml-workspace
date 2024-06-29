@@ -21,3 +21,19 @@ grep -E 'sse2|avx|avx2|avx512' /proc/cpuinfo | sort -u
 
 The -march=native flag tells the compiler to use the highest SIMD instruction set supported by your CPU.
 
+
+A "leaf" in CPUID terminology is essentially a category of information.
+When you call CPUID, you specify which leaf (category) of information you want by setting a value in the EAX register before calling CPUID.
+
+Location in the Manual:
+In Volume 2A, look for the section titled "CPUID—CPU Identification".
+This is typically in Chapter 3, "Instruction Set Reference, A-L".
+
+Leaf 0: Maximum Basic Information and Vendor ID
+Leaf 1: Processor Info and Feature Bits
+Leaf 2: Cache and TLB Descriptor Information
+Leaf 3: Processor Serial Number (obsolete)
+Leaf 4: Deterministic Cache Parameters
+Leaf 5: MONITOR/MWAIT Features
+Leaf 6: Thermal and Power Management Features
+Leaf 7: Structured Extended Feature Flags
