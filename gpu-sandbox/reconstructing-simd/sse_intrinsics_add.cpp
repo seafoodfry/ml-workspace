@@ -15,6 +15,8 @@ void simd_add_doubles(const std::vector<double>& a, const std::vector<double>& b
 
 template<typename T>
 void print_array(const std::vector<T>& arr, const std::string& name);
+template<typename SimdType, typename BaseType>
+void print_m128_intrinsic(SimdType value);
 
 
 
@@ -69,11 +71,11 @@ int main() {
 
     // Print the results.
     std::cout << "aDouble = ";
-    print_m128d(aDouble);
+    print_m128_intrinsic<__m128d, double>(aDouble);
     std::cout << "bDouble = ";
-    print_m128d(bDouble);
+    print_m128_intrinsic<__m128d, double>(bDouble);
     std::cout << "resultDouble = ";
-    print_m128d(resultDouble);
+    print_m128_intrinsic<__m128d, double>(resultDouble);
 
 
     std::cout << "\nSIMD addition of array-like objects storing doubles...\n";
@@ -122,6 +124,19 @@ void print_array(const std::vector<T>& arr, const std::string& name) {
         std::cout << value << " ";
     }
     std::cout << std::endl;
+}
+
+template<typename SimdType, typename BaseType>
+void print_m128_intrinsic(SimdType value) {
+    BaseType* f = static_cast<BaseType*>(static_cast<void*>(&value));
+    std::cout << std::setprecision(6) << std::fixed << "[";
+
+    // Using the size ratio to figure out how many elements need to be printed.
+    for (int i = 0; i < sizeof(SimdType) / sizeof(BaseType); ++i) {
+        if (i > 0) std::cout << ", ";
+        std::cout << f[i];
+    }
+    std::cout << "]" << std::endl;
 }
 
 void print_m128(__m128 value) {
