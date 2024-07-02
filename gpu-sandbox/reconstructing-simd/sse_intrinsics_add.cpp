@@ -1,9 +1,11 @@
 /*
-    g++ -msse sse_intrinsics_add.cpp -o sse_intrinsics_add.out
+    g++ -std=c++17 -msse sse_intrinsics_add.cpp -o sse_intrinsics_add.out
 */
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <cstdlib>
+#include <memory>
 #include <xmmintrin.h>
 #include <emmintrin.h>  // For double-precision, 64 bit/8 byte, precision ops.
 
@@ -12,13 +14,169 @@ void print_m128(__m128 value);
 void print_m128d(__m128d value);
 void simd_add(const std::vector<float>& a, const std::vector<float>& b, std::vector<float>& result);
 void simd_add_doubles(const std::vector<double>& a, const std::vector<double>& b, std::vector<double>& result);
+void simd_add_aligned(const float* a, const float* b, float* result, size_t size);
 
 template<typename T>
 void print_array(const std::vector<T>& arr, const std::string& name);
 template<typename SimdType, typename BaseType>
 void print_m128_intrinsic(SimdType value);
 
+template <typename T, std::size_t Alignment>
+class aligned_allocator {
+public:
+    using value_type = T;
+    using pointer = T*;
+    using const_pointer = const T*;
+    using reference = T&;
+    using const_reference = const T&;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
 
+    // Old-style rebind deprecated in C++17.
+    template<typename U>
+    struct rebind {
+        using other = aligned_allocator<U, Alignment>;
+    };
+    // New-style rebind (C++20 and later).
+    template <typename U>
+    using rebind_alloc = aligned_allocator<U, Alignment>;
+
+    aligned_allocator() noexcept = default;
+    template <class U> aligned_allocator(const aligned_allocator<U, Alignment>&) noexcept {}
+
+    T* allocate(std::size_t n) {
+        if (n > std::numeric_limits<std::size_t>::max() / sizeof(T))
+            throw std::bad_alloc();
+        if (auto p = static_cast<T*>(std::aligned_alloc(Alignment, n * sizeof(T))))
+            return p;
+        throw std::bad_alloc();
+    }
+
+    void deallocate(T* p, std::size_t) noexcept {
+        std::free(p);
+    }
+
+    template<typename U, typename... Args>
+    void construct(U* p, Args&&... args) {
+        ::new((void *)p) U(std::forward<Args>(args)...);
+    }
+
+    template<typename U>
+    void destroy(U* p) {
+        p->~U();
+    }
+
+    size_type max_size() const noexcept {
+        return std::numeric_limits<size_type>::max() / sizeof(T);
+    }
+};
+
+template <class T, class U, size_t Alignment>
+bool operator==(const aligned_allocator<T, Alignment>&, const aligned_allocator<U, Alignment>&) noexcept {
+    return true;
+}
+
+template <class T, class U, size_t Alignment>
+bool operator!=(const aligned_allocator<T, Alignment>&, const aligned_allocator<U, Alignment>&) noexcept {
+    return false;
+}
+
+
+void test_simd_add_aligned() {
+    const size_t size = 8; // Must be a multiple of 4 for 128-bit SIMD
+
+    // Method #1: using std::aligned_alloc (C++17).
+    // Allignment must be a power of 2 and a multiple of sizeof(void*).
+    // Remember that 128 bits are 16 bytes. And that a 128-bit register can fit 4 4-byte float values.
+    float* a1 = static_cast<float*>(std::aligned_alloc(16, size * sizeof(float)));
+    float* b1 = static_cast<float*>(std::aligned_alloc(16, size * sizeof(float)));
+    float* result1 = static_cast<float*>(std::aligned_alloc(16, size * sizeof(float)));
+
+    // Method 2: posix_memalign
+    float *a2, *b2, *result2;
+    if (posix_memalign(reinterpret_cast<void**>(&a2), 16, size * sizeof(float)) != 0) {
+        throw std::bad_alloc();
+    }
+    if (posix_memalign(reinterpret_cast<void**>(&b2), 16, size * sizeof(float)) != 0) {
+        throw std::bad_alloc();
+    }
+    if (posix_memalign(reinterpret_cast<void**>(&result2), 16, size * sizeof(float)) != 0) {
+        throw std::bad_alloc();
+    }
+
+    // Method #3: align std::vector with an allocation class.
+    std::vector<float, aligned_allocator<float, 16>> a3(size);
+    std::vector<float, aligned_allocator<float, 16>> b3(size);
+    std::vector<float, aligned_allocator<float, 16>> result3(size);
+
+    // Method #4: using __attribute__((aligned(16))) (gcc, clang) or alignas(16) (C++11).
+    // Ensures stack-allocated arrays are aligned.
+    // float __attribute__((aligned(16))) alignedArray3[4];
+    alignas(16) float a4[size];
+    alignas(16) float b4[size];
+    alignas(16) float result4[size];
+
+    // Method #5: using __mm_malloc() and __mm_free() (intel).
+    float* a5 = static_cast<float*>(_mm_malloc(size * sizeof(float), 16));
+    float* b5 = static_cast<float*>(_mm_malloc(size * sizeof(float), 16));
+    float* result5 = static_cast<float*>(_mm_malloc(size * sizeof(float), 16));
+
+    // Initialize arrays (example values).
+    for (size_t i = 0; i < size; ++i) {
+        float val_a = static_cast<float>(i + 1);
+        float val_b = static_cast<float>(i + 1) * 0.1f;
+        
+        a1[i] = a2[i] = a3[i] = a4[i] = a5[i] = val_a;
+        b1[i] = b2[i] = b3[i] = b4[i] = b5[i] = val_b;
+    }
+
+    // Perform aligned SIMD addition for each method
+    simd_add_aligned(a1, b1, result1, size);
+    simd_add_aligned(a2, b2, result2, size);
+    simd_add_aligned(a3.data(), b3.data(), result3.data(), size);
+    simd_add_aligned(a4, b4, result4, size);
+    simd_add_aligned(a5, b5, result5, size);
+
+    // Print results (only showing Method 1 for brevity)
+    std::cout << "\nMethod 1 (std::aligned_alloc) result: ";
+    for (size_t i = 0; i < size; ++i) {
+        std::cout << result1[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Print results (only showing Method 1 for brevity)
+    std::cout << "\nMethod 2 (posis_memalign) result: ";
+    for (size_t i = 0; i < size; ++i) {
+        std::cout << result2[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Print results (only showing Method 1 for brevity)
+    std::cout << "\nMethod 3 (std::vector) result: ";
+    for (size_t i = 0; i < size; ++i) {
+        std::cout << result3[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Print results (only showing Method 1 for brevity)
+    std::cout << "\nMethod 4 (alignas) result: ";
+    for (size_t i = 0; i < size; ++i) {
+        std::cout << result4[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Print results (only showing Method 1 for brevity)
+    std::cout << "\nMethod 5 (_mm_aloc) result: ";
+    for (size_t i = 0; i < size; ++i) {
+        std::cout << result1[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Free allocated memory
+    std::free(a1); std::free(b1); std::free(result1);
+    std::free(a2); std::free(b2); std::free(result2);
+    _mm_free(a5); _mm_free(b5); _mm_free(result5);
+}
 
 int main() {
     /*
@@ -90,7 +248,22 @@ int main() {
 
     print_array(resultVecD, "resultVecD");
 
+    /*
+        Examples of aligned memory allocations.
+    */
+    test_simd_add_aligned();
+
     return 0;
+}
+
+
+void simd_add_aligned(const float* a, const float* b, float* result, size_t size) {
+    for (size_t i = 0; i < size; i += 4) {
+        __m128 va = _mm_load_ps(a + i);  // Note: Using _mm_load_ps instead of _mm_loadu_ps
+        __m128 vb = _mm_load_ps(b + i);
+        __m128 vr = _mm_add_ps(va, vb);
+        _mm_store_ps(result + i, vr);    // Note: Using _mm_store_ps instead of _mm_storeu_ps
+    }
 }
 
 void simd_add(const std::vector<float>& a, const std::vector<float>& b, std::vector<float>& result) {
