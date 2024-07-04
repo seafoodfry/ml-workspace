@@ -78,6 +78,15 @@ In 32-bit arch, it is the extended instruction pointer register `EIP`.
 In 64-bit arch, its just the register instruction pointer `RIP`.
 
 
+
+### Memory Alignment
+
+We could go on an on but there is this better article that describes why alignment is important for performance
+[Structure Member Alignment, Padding and Data Packing](https://www.geeksforgeeks.org/structure-member-alignment-padding-and-data-packing/).
+Ultimately, it comes to how much data things such as the buses can load at once, and if things are aligned
+then its more likely for data to be acquired at once and not require multiple memory cycles to be loaded.
+
+
 ### CPUID
 
 In section 1.3.5, we get our first glimpse at CPUID:
