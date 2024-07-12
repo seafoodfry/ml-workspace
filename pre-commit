@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Exit immediately when encountering a non-zero command
+set -e
+
+
+pwd
+
+echo "auditing code..."
+cargo audit
+
+echo "testing code..."
+cargo test
+
+echo "scanning for secrets..."
+git-secrets --scan -r

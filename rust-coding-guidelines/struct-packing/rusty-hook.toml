@@ -1,5 +1,5 @@
 [hooks]
-pre-commit = ["sh pre-commit-rust"]
+pre-commit = ["cargo check"]
 pre-push = ["cargo fmt -- --check", "git secrets --scan-history"]
 post-commit = "echo yay"
 

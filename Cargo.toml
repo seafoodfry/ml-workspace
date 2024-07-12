@@ -2,3 +2,4 @@
 members = [
     "rust-coding-guidelines/struct-packing",
 ]
+resolver = "2"
