@@ -1,0 +1,6 @@
+[hooks]
+pre-commit = "sh pre-commit"
+pre-push = ["cargo fmt -- --check", "git secrets --scan-history"]
+
+[logging]
+verbose = true
