@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "rust-coding-guidelines/fork-and-signals",
+    "rust-coding-guidelines/fork-variables",
+    "rust-coding-guidelines/struct-packing",
+]
+resolver = "2"

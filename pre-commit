@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# Exit immediately when encountering a non-zero command
+set -e
+
+# Define the commands to run
+commands=(
+    "cargo audit"
+    "cargo test"
+)
+
+# Find all subproject directories containing a Cargo.toml file
+subprojects=$(find . -name Cargo.toml -exec dirname {} \;)
+
+# Run the commands in each subproject directory
+for subproject in $subprojects; do
+  echo "Running hooks in $subproject"
+  for cmd in "${commands[@]}"; do
+    (cd "$subproject" && eval "$cmd")
+    if [ $? -ne 0 ]; then
+      echo "Command '$cmd' failed in $subproject"
+      exit 1
+    fi
+  done
+done
+
+echo "scanning for secrets..."
+git-secrets --scan -r

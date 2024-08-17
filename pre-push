@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Exit immediately when encountering a non-zero command
+set -e
+
+# Cargo fmt -- --check runs through all the code.
+cargo fmt -- --check
+
+echo "scanning commit history..."
+git secrets --scan-history

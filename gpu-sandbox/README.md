@@ -147,3 +147,24 @@ outlines how you may go about accessing these log files.
 
 We actually found the userdata execution log in
 `C:\ProgramData\Amazon\EC2-Windows\Launch\Log\UserdataExecution.log`.
+
+
+
+---
+
+## Visual Studio
+
+To enable SSE2
+1. Project Properties
+2. Configuration Properties
+3. C/C++
+4. Code Generation
+5. Enable Enhanced Instruction Set
+
+
+To enable fast floating point model `/fp:fast` for all platforms
+1. Project Properties
+2. Configuration Properties
+3. C/C++
+4. Code Generation
+5. Floating Point Model
