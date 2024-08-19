@@ -29,3 +29,7 @@ All we need to do to run the code is the following command:
 cargo bench
 ```
 
+This will generate a very informative and beautiful report that you can see via:
+```
+open ../../target/criterion/report/index.html
+```

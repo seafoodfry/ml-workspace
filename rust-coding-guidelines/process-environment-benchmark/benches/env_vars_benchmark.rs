@@ -1,5 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::env as p_env;
+use std::time::Duration;
 
 fn clean_env_vars_loop() {
     for (key, _) in p_env::vars() {
@@ -18,10 +19,11 @@ fn setup_env_vars(num_vars: usize) {
 }
 
 fn benchmark_clean_env_vars(c: &mut Criterion) {
-    let num_vars = 1000; // You can adjust this number
+    let num_vars = 100; // You can adjust this number
 
     let mut group = c.benchmark_group("clean_env_vars");
-    group.sample_size(50); // Adjust as needed
+    group.sample_size(50);
+    group.measurement_time(Duration::from_secs(10));
 
     group.bench_function("loop", |b| {
         b.iter(|| {
