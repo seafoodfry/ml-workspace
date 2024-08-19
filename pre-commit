@@ -5,7 +5,6 @@ set -e
 
 # Define the commands to run
 commands=(
-    "cargo audit"
     "cargo test"
 )
 
@@ -14,15 +13,21 @@ subprojects=$(find . -name Cargo.toml -exec dirname {} \;)
 
 # Run the commands in each subproject directory
 for subproject in $subprojects; do
-  echo "Running hooks in $subproject"
+  echo ">>> Running hooks in $subproject"
   for cmd in "${commands[@]}"; do
-    (cd "$subproject" && eval "$cmd")
-    if [ $? -ne 0 ]; then
-      echo "Command '$cmd' failed in $subproject"
-      exit 1
-    fi
+    (
+      cd "$subproject"
+      eval "$cmd"
+      if [ $? -ne 0 ]; then
+        echo ">>> Command '$cmd' failed in $subproject"
+        exit 1
+      fi
+    )
   done
 done
 
-echo "scanning for secrets..."
+echo ">>> Auditing dependencies..."
+cargo audit
+
+echo ">>> scanning for secrets..."
 git-secrets --scan -r
