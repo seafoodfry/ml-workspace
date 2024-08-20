@@ -6,7 +6,7 @@ locals {
 }
 
 module "linux_vanilla" {
-  count  = 1
+  count  = 0
   source = "../modules/ec2s/linux/vanilla"
 
   name              = "dev"
@@ -19,6 +19,31 @@ module "linux_vanilla" {
   instance_profile_name = aws_iam_instance_profile.dcv.name
 }
 output "linux_vanilla_dns" {
+  value       = module.linux_vanilla[*].public_dns
+  description = "Public dev DNS"
+}
+
+# The AMI recommended by the launch wizard is
+# ami-0862be96e41dcbf74 (64-bit (x86)) / ami-03bfe38a90ce33425 (64-bit (Arm)).
+# We got the info about it with:
+#   ./run-cmd-in-shell.sh aws ec2 describe-images --image-ids ami-0862be96e41dcbf74
+# We got candidates with the command:
+# ./run-cmd-in-shell.sh aws ec2 describe-images --owners 099720109477 --filters "Name=platform-details,Values=Linux/UNIX" "Name=architecture,Values=x86_64"  "Name=name,Values=*ubuntu-noble*" "Name=creation-date,Values=2024-08-19*" "Name=description,Values=*Ubuntu*" > out.json
+module "ubuntu_metal" {
+  count  = 1
+  source = "../modules/ec2s/linux/vanilla"
+
+  name              = "firecracker"
+  ami               = "ami-0925bd884b1bc0900"
+  type              = "c5.metal"
+  spot_max_price    = "2.0"
+  security_group_id = aws_security_group.ssh.id
+  subnet_id         = module.vpc.public_subnets[0]
+  ec2_key_name      = var.ec2_key_name
+
+  instance_profile_name = aws_iam_instance_profile.dcv.name
+}
+output "ubuntu_metal_dns" {
   value       = module.linux_vanilla[*].public_dns
   description = "Public dev DNS"
 }
