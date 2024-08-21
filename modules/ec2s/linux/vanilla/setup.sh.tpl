@@ -4,15 +4,15 @@ set -x
 USERNAME="ec2-user"
 
 os_name=$(grep ^ID= /etc/os-release | cut -d'=' -f2 | tr -d '"')
-echo "working on ${os_name}..."
+echo "working on $os_name..."
 if [ "$os_name" == "ubuntu" ]; then
-    # Custom code for Ubuntu
     echo "Running on Ubuntu"
+    USERNAME="ubuntu"
 else
     echo "Unknown OS"
 fi
 
-date > /home/${USERNAME}/CLOUDINIT-STARTED
+date > /home/$USERNAME/CLOUDINIT-STARTED
 
 
 sudo yum update -y
@@ -59,4 +59,4 @@ else
     echo "Skipping Docker installation."
 fi
 
-date > /home/${USERNAME}/CLOUDINIT-COMPLETED
+date > /home/$USERNAME/CLOUDINIT-COMPLETED
