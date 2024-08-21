@@ -35,3 +35,8 @@ variable "volume_size" {
 variable "instance_profile_name" {
   type = string
 }
+
+variable "install_docker" {
+  type = bool
+  default = true
+}

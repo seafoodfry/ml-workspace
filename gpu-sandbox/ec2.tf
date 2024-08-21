@@ -1,10 +1,4 @@
 
-locals {
-  vars = {
-    #some_address = aws_instance.some.private_ip
-  }
-}
-
 module "linux_vanilla" {
   count  = 0
   source = "../modules/ec2s/linux/vanilla"
@@ -30,7 +24,7 @@ output "linux_vanilla_dns" {
 # We got candidates with the command:
 # ./run-cmd-in-shell.sh aws ec2 describe-images --owners 099720109477 --filters "Name=platform-details,Values=Linux/UNIX" "Name=architecture,Values=x86_64"  "Name=name,Values=*ubuntu-noble*" "Name=creation-date,Values=2024-08-19*" "Name=description,Values=*Ubuntu*" > out.json
 module "ubuntu_metal" {
-  count  = 1
+  count  = 0
   source = "../modules/ec2s/linux/vanilla"
 
   name              = "firecracker"
@@ -38,13 +32,16 @@ module "ubuntu_metal" {
   type              = "c5.metal"
   spot_max_price    = "2.0"
   security_group_id = aws_security_group.ssh.id
-  subnet_id         = module.vpc.public_subnets[0]
+  subnet_id         = module.vpc.public_subnets[2]
   ec2_key_name      = var.ec2_key_name
+
+  # Customizations.
+  install_docker = true
 
   instance_profile_name = aws_iam_instance_profile.dcv.name
 }
 output "ubuntu_metal_dns" {
-  value       = module.linux_vanilla[*].public_dns
+  value       = module.ubuntu_metal[*].public_dns
   description = "Public dev DNS"
 }
 

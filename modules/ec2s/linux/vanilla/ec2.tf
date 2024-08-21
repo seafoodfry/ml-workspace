@@ -1,7 +1,7 @@
 
 locals {
   vars = {
-    #some_address = aws_instance.some.private_ip
+    install_docker = var.install_docker
   }
 }
 
