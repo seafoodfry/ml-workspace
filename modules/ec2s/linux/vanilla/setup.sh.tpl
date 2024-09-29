@@ -25,7 +25,7 @@ sudo yum install -y xorg-x11-xauth xorg-x11-apps glx-utils
 ##############################
 #       Install Docker       #
 ##############################
-install_docker() {
+do_install_docker() {
     # Installation instructions come from https://docs.docker.com/engine/install/ubuntu/
     for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do
         sudo apt-get remove -y $pkg;
@@ -54,7 +54,7 @@ install_docker() {
 
 
 if [ "${install_docker}" = "true" ]; then
-    install_docker
+    do_install_docker
 else
     echo "Skipping Docker installation."
 fi
