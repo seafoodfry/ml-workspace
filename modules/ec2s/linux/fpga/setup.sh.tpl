@@ -8,6 +8,9 @@ echo "working on $os_name..."
 if [ "$os_name" == "ubuntu" ]; then
     echo "Running on Ubuntu"
     USERNAME="ubuntu"
+elif [ "$os_name" == "centos" ]; then
+    echo "Running on CentOS"
+    USERNAME="centos"
 else
     echo "Unknown OS"
 fi
