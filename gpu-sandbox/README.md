@@ -41,8 +41,17 @@ For non-GPU AMIs we did
 ./run-cmd-in-shell.sh aws ec2 describe-images --owner amazon --filters "Name=platform,Values=windows" "Name=architecture,Values=x86_64" "Name=creation-date,Values=2024-06*" "Name=description,Values=*Windows Server*" "Name=name,Values=*English*" --query 'Images[?!contains(Description, `"2016"`) && !contains(Description, `SQL`) && !contains(Description, `EKS`) && !contains(Description, `ECS`) ]' > out.json
 ```
 
+## CHecking if FPGA Instances are available
 
-### Running the GPU
+```
+./run-cmd-in-shell.sh aws ec2 describe-instance-type-offerings --filters Name=instance-type,Values=f1.2xlarge --region us-east-1
+```
+
+Make sure to replace the `--region` argument with whatever region you want to check.
+You can also add `--location-type availability-zone`.
+
+
+### Running the EC2
 
 
 Commands to get things up and running
