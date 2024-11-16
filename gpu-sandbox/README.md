@@ -42,7 +42,7 @@ For non-GPU AMIs we did
 ```
 
 
-### Running the GPU
+### Running the EC2
 
 
 Commands to get things up and running

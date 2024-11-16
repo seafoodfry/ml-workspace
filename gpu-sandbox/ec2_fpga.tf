@@ -16,5 +16,5 @@ module "fpga" {
 }
 output "fpga" {
   value       = module.fpga[*].public_dns
-  description = "Public dev DNS"
+  description = "Public fpga DNS"
 }
