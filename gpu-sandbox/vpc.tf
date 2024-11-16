@@ -10,7 +10,7 @@ locals {
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
-  name = "opengl"
+  name = "sandbox"
   cidr = "10.0.0.0/16"
 
   azs             = local.selected_azs
