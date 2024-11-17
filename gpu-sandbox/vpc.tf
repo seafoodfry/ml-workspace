@@ -36,6 +36,28 @@ resource "aws_security_group" "ssh" {
     protocol    = "tcp"
     cidr_blocks = ["${var.my_ip}/32"]
   }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+}
+
+resource "aws_security_group" "ssh_and_dcv" {
+  name        = "ssh_and_dcv"
+  description = "Allow SSH and NICE DCV from a specific IP"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["${var.my_ip}/32"]
+  }
   ingress {
     description = "DCV"
     from_port   = 8443
