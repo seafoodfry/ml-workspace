@@ -8,7 +8,9 @@
 # jupyter lab --ip=0.0.0.0
 # tmux detach
 # tmux ls
-# scp ubuntu@${EC2}:/home/ubuntu/src/pytorch-101.ipynb ./llm-book
+# rsync -rvzP ./llm-book ubuntu@${EC2}:/home/ubuntu
+# rsync -rvzP ubuntu@${EC2}:/home/ubuntu/llm-book/ ./llm-book
+# scp ubuntu@${EC2}:/home/ubuntu/llm-book/pytorch-101.ipynb ./llm-book
 module "linux_gpu_pytorch" {
   count  = 1
   source = "../modules/ec2s/linux/gpu"
