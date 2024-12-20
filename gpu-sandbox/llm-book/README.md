@@ -56,4 +56,6 @@ pip install jupyterlab                     # https://jupyter.org/install
 pip install Pympler                        # https://pypi.org/project/Pympler/
 pip install tiktoken                       # https://github.com/openai/tiktoken
 pip3 install torch torchvision torchaudio  # https://pytorch.org/get-started/locally/
+pip install scikit-learn                   # https://scikit-learn.org/stable/install.html
+pip install statsmodels                    # https://www.statsmodels.org/stable/install.html
 ```
