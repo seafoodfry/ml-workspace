@@ -41,6 +41,7 @@ jupyter lab
 1. tqdm: https://github.com/tqdm/tqdm
 1. ipywidgets: https://ipywidgets.readthedocs.io/en/stable/user_install.html
 1. ipympl: https://matplotlib.org/ipympl/
+1. scipy: https://scipy.org/install/
 
 ```sh
 poetry add opencv-contrib-python
@@ -49,6 +50,7 @@ poetry add matplotlib
 poetry add tqdm
 poetry add ipywidgets
 poetry add ipympl
+poetry add scipy
 ```
 
 
