@@ -38,6 +38,8 @@ int main(void) {
         printf("%d certs!\n", certinfo->num_of_certs);
 
         for (i = 0; i < certinfo->num_of_certs; i++) {
+          // See
+          // https://github.com/curl/curl/blob/7c039292ad955db327dce4e9e6a3f612ddef3c58/include/curl/curl.h#L2762-L2766
           struct curl_slist *slist;
 
           for (slist = certinfo->certinfo[i]; slist; slist = slist->next)
