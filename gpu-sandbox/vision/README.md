@@ -42,6 +42,7 @@ jupyter lab
 1. ipywidgets: https://ipywidgets.readthedocs.io/en/stable/user_install.html
 1. ipympl: https://matplotlib.org/ipympl/
 1. scipy: https://scipy.org/install/
+1. scikit-image: https://scikit-image.org/docs/stable/user_guide/install.html#install-via-pip
 
 ```sh
 poetry add opencv-contrib-python
@@ -51,6 +52,5 @@ poetry add tqdm
 poetry add ipywidgets
 poetry add ipympl
 poetry add scipy
+poetry add scikit-image
 ```
-
-

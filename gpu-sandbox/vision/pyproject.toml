@@ -14,6 +14,7 @@ tqdm = "^4.67.1"
 ipywidgets = "^8.1.5"
 ipympl = "^0.9.6"
 scipy = "^1.15.1"
+scikit-image = "^0.25.0"
 
 
 [build-system]
