@@ -1,22 +1,16 @@
-[tool.poetry]
+[project]
 name = "vision"
 version = "0.1.0"
-description = ""
-authors = ["seafoodfry <99568361+seafoodfry@users.noreply.github.com>"]
+description = "Add your description here"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.13"
-opencv-contrib-python = "^4.10.0.84"
-jupyterlab = "^4.3.4"
-matplotlib = "^3.10.0"
-tqdm = "^4.67.1"
-ipywidgets = "^8.1.5"
-ipympl = "^0.9.6"
-scipy = "^1.15.1"
-scikit-image = "^0.25.0"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires-python = ">=3.13"
+dependencies = [
+    "ipympl>=0.9.6",
+    "ipywidgets>=8.1.5",
+    "jupyterlab>=4.3.5",
+    "matplotlib>=3.10.0",
+    "opencv-contrib-python>=4.11.0.86",
+    "scikit-image>=0.25.1",
+    "scipy>=1.15.1",
+    "tqdm>=4.67.1",
+]
