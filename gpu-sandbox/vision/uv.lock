@@ -1165,6 +1165,24 @@ wheels = [
 ]
 
 [[package]]
+name = "pytube"
+version = "15.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/e7/16fec46c8d255c4bbc4b185d89c91dc92cdb802836570d8004d0db169c91/pytube-15.0.0.tar.gz", hash = "sha256:076052efe76f390dfa24b1194ff821d4e86c17d41cb5562f3a276a8bcbfc9d1d", size = 67229 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/51/64/bcf8632ed2b7a36bbf84a0544885ffa1d0b4bcf25cc0903dba66ec5fdad9/pytube-15.0.0-py3-none-any.whl", hash = "sha256:07b9904749e213485780d7eb606e5e5b8e4341aa4dccf699160876da00e12d78", size = 57594 },
+]
+
+[[package]]
+name = "pytubefix"
+version = "8.12.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/c0/5201796b7df003368ac718225f26109300a9ac9c8c1cce9966c163b8636c/pytubefix-8.12.1.tar.gz", hash = "sha256:64af1ce25543007b1eadf1e2e01363839b0e4dd3c62ca2ae008f46c5462a2c54", size = 733063 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/36/ff/185aaa78e74bfcd75a1d174070ba1e037b07822779f0e834556e2f9e7fcf/pytubefix-8.12.1-py3-none-any.whl", hash = "sha256:1101463302b87c9a7172632232740413366919c4456255f5a85d114d0c60e0ec", size = 730673 },
+]
+
+[[package]]
 name = "pywin32"
 version = "308"
 source = { registry = "https://pypi.org/simple" }
@@ -1537,6 +1555,8 @@ dependencies = [
     { name = "jupyterlab" },
     { name = "matplotlib" },
     { name = "opencv-contrib-python" },
+    { name = "pytube" },
+    { name = "pytubefix" },
     { name = "scikit-image" },
     { name = "scipy" },
     { name = "tqdm" },
@@ -1549,6 +1569,8 @@ requires-dist = [
     { name = "jupyterlab", specifier = ">=4.3.5" },
     { name = "matplotlib", specifier = ">=3.10.0" },
     { name = "opencv-contrib-python", specifier = ">=4.11.0.86" },
+    { name = "pytube", specifier = ">=15.0.0" },
+    { name = "pytubefix", specifier = ">=8.12.1" },
     { name = "scikit-image", specifier = ">=0.25.1" },
     { name = "scipy", specifier = ">=1.15.1" },
     { name = "tqdm", specifier = ">=4.67.1" },
