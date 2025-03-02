@@ -6,6 +6,7 @@
 #
 # ssh -L 8888:127.0.0.1:8888 ubuntu@${EC2}
 # rsync -rvzP gromacs ubuntu@${EC2}:/home/ubuntu/src
+# rsync -rvzP ubuntu@${EC2}:/home/ubuntu/src/gromacs . --exclude='.venv'
 #
 # tmux new -s jupyter
 # uv run jupyter lab --ip=0.0.0.0
@@ -15,7 +16,7 @@
 # tmux attach -t jupyter
 # tmux kill-session -t jupyter
 module "gromacs" {
-  count  = 1
+  count  = 0
   source = "../modules/ec2s/linux/gromacs"
 
   name              = "gromacs"
