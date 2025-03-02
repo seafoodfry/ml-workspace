@@ -8,18 +8,19 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.76"
+      version = "~> 5.89"
     }
   }
 
-  required_version = "~> 1.9.8"
+  required_version = ">= 1.11"
 }
 
 provider "aws" {
+  alias = "us_east_2"
   region = "us-east-2"
 }
 
 provider "aws" {
-  alias = "us_east_1"
+  #alias = "us_east_1"
   region = "us-east-1"
 }
