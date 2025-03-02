@@ -1,0 +1,11 @@
+[project]
+name = "gromacs"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "jupyterlab>=4.3.5",
+    "nglview>=3.1.4",
+    "pandas>=2.2.3",
+]
