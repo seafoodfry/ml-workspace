@@ -4,7 +4,7 @@ variable "name" {
 
 variable "spot_max_price" {
   type    = string
-  default = "0.7" # https://aws.amazon.com/ec2/spot/pricing/
+  default = "0.6" # https://aws.amazon.com/ec2/spot/pricing/
 }
 
 variable "ami" {
@@ -34,4 +34,10 @@ variable "volume_size" {
 
 variable "instance_profile_name" {
   type = string
+  default = ""
+}
+
+variable "install_docker" {
+  type = bool
+  default = true
 }

@@ -12,7 +12,7 @@
 # rsync -rvzP ubuntu@${EC2}:/home/ubuntu/llm-book/ ./llm-book
 # scp ubuntu@${EC2}:/home/ubuntu/llm-book/pytorch-101.ipynb ./llm-book
 module "linux_gpu_pytorch" {
-  count  = 1
+  count  = 0
   source = "../modules/ec2s/linux/gpu"
 
   name                  = "linux-gpu"
