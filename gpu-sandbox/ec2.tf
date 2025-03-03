@@ -6,8 +6,8 @@ module "linux_vanilla" {
   name              = "dev"
   ami               = "ami-04064f2a9939d4f29"
   type              = "t3.xlarge"
-  security_group_id = aws_security_group.ssh.id
-  subnet_id         = module.vpc.public_subnets[0]
+  security_group_id = aws_security_group.ssh[0].id
+  subnet_id         = module.vpc[0].public_subnets[0]
   ec2_key_name      = var.ec2_key_name
 
   instance_profile_name = aws_iam_instance_profile.dcv.name
@@ -31,8 +31,8 @@ module "ubuntu_metal" {
   ami               = "ami-0925bd884b1bc0900"
   type              = "c5.metal"
   spot_max_price    = "2.0"
-  security_group_id = aws_security_group.ssh.id
-  subnet_id         = module.vpc.public_subnets[2]
+  security_group_id = aws_security_group.ssh[0].id
+  subnet_id         = module.vpc[0].public_subnets[2]
   ec2_key_name      = var.ec2_key_name
 
   # Customizations.
@@ -52,8 +52,8 @@ module "linux_gpu" {
   name                  = "linux-gpu"
   ami                   = "ami-0c4b8684fc96c1de0"
   type                  = "g4dn.xlarge"
-  security_group_id     = aws_security_group.ssh.id
-  subnet_id             = module.vpc.public_subnets[0]
+  security_group_id     = aws_security_group.ssh[0].id
+  subnet_id             = module.vpc[0].public_subnets[0]
   ec2_key_name          = var.ec2_key_name
   instance_profile_name = aws_iam_instance_profile.dcv.name
 }
@@ -71,8 +71,8 @@ module "windows_gpu" {
   #type              = "g4dn.xlarge"
   ami               = "ami-0aa76edf764a3a139" # Non-GPU
   type              = "t3.xlarge"
-  security_group_id = aws_security_group.rdp.id
-  subnet_id         = module.vpc.public_subnets[0]
+  security_group_id = aws_security_group.rdp[0].id
+  subnet_id         = module.vpc[0].public_subnets[0]
   ec2_key_name      = var.ec2_key_name
 }
 output "windows_gpu_dns" {
