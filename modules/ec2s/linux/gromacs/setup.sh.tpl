@@ -65,6 +65,60 @@ EOF
     chown ${USERNAME}:${USERNAME} /home/$USERNAME/user-setup.sh
 
 
+# Create user setup script.
+log "Creating ssh step 1 script..."
+cat << 'EOF' > /home/$USERNAME/config-ssh-pt1.sh
+#!/bin/bash
+set -euo pipefail
+set -x
+
+# Create shared directory on EFS.
+SHARED_DIR="/mnt/efs/ssh_pubkeys"
+mkdir -p $SHARED_DIR
+
+# Get hostname for unique key identification.
+HOSTNAME=$(hostname)
+
+# Generate key if it doesn't exist.
+if [ ! -f ~/.ssh/id_rsa_mpi ]; then
+    ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa_mpi
+    echo "Generated new SSH key for MPI"
+else
+    echo "SSH key already exists, using existing key"
+fi
+
+# Create a combined keys file for easier setup.
+cat ~/.ssh/id_rsa_mpi.pub >> $SHARED_DIR/all_nodes.pub
+echo "Added key to combined keys file"
+
+echo "Key generation and sharing complete. Run the setup script on each node."
+EOF
+    chmod +x /home/$USERNAME/config-ssh-pt1.sh
+    chown ${USERNAME}:${USERNAME} /home/$USERNAME/config-ssh-pt1.sh
+
+log "Creating ssh step 2 script..."
+cat << 'EOF' > /home/$USERNAME/config-ssh-pt2.sh
+#!/bin/bash
+set -euo pipefail
+set -x
+
+SHARED_DIR="/mnt/efs/ssh_pubkeys"
+
+# Add all public keys to authorized_keys.
+cat $SHARED_DIR/all_nodes.pub >> ~/.ssh/authorized_keys
+
+# Create SSH config to use the right key and disable host checking.
+cat > ~/.ssh/config << INNEREOF
+Host ip-10-0-101-*
+  IdentityFile ~/.ssh/id_rsa_mpi
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+INNEREOF
+chmod 600 ~/.ssh/config
+EOF
+    chmod +x /home/$USERNAME/config-ssh-pt2.sh
+    chown ${USERNAME}:${USERNAME} /home/$USERNAME/config-ssh-pt2.sh
+
 #######################
 ### Install GROMACS ###
 #######################
