@@ -1,10 +1,4 @@
 
-locals {
-  vars = {
-    install_docker = var.install_docker
-  }
-}
-
 resource "aws_instance" "ec2" {
   instance_market_options {
     market_type = "spot"
@@ -34,7 +28,7 @@ resource "aws_instance" "ec2" {
   }
 
   iam_instance_profile = var.instance_profile_name != "" ? var.instance_profile_name : null
-  user_data            = base64encode(templatefile("${path.module}/setup.sh.tpl", local.vars))
+  user_data = base64encode(file("${path.module}/setup.sh.tpl"))
 
   tags = {
     Name = var.name

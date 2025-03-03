@@ -18,8 +18,8 @@ module "linux_gpu_pytorch" {
   name                  = "linux-gpu"
   ami                   = "ami-0851312e7e2e98398"
   type                  = "g6e.xlarge"
-  security_group_id     = aws_security_group.ssh.id
-  subnet_id             = module.vpc.public_subnets[0]
+  security_group_id     = aws_security_group.ssh[0].id
+  subnet_id             = module.vpc[0].public_subnets[0]
   ec2_key_name          = var.ec2_key_name
   instance_profile_name = aws_iam_instance_profile.dcv.name
 }

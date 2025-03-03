@@ -8,7 +8,9 @@ locals {
 }
 
 module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
+  count   = 1
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 5.19"
 
   name = "sandbox"
   cidr = "10.0.0.0/16"
@@ -25,9 +27,11 @@ module "vpc" {
 }
 
 resource "aws_security_group" "ssh" {
+  count = 1
+
   name        = "ssh"
   description = "Allow SSH from a specific IP"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = module.vpc[0].vpc_id
 
   ingress {
     description = "SSH"
@@ -47,9 +51,11 @@ resource "aws_security_group" "ssh" {
 }
 
 resource "aws_security_group" "ssh_and_dcv" {
+  count = 0
+
   name        = "ssh_and_dcv"
   description = "Allow SSH and NICE DCV from a specific IP"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = module.vpc[0].vpc_id
 
   ingress {
     description = "SSH"
@@ -77,9 +83,11 @@ resource "aws_security_group" "ssh_and_dcv" {
 
 
 resource "aws_security_group" "rdp" {
+  count = 0
+
   name        = "rdp"
   description = "Allow RDP from a specific IP"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = module.vpc[0].vpc_id
 
   ingress {
     description = "RDP"

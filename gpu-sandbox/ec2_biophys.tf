@@ -16,14 +16,14 @@
 # tmux attach -t jupyter
 # tmux kill-session -t jupyter
 module "gromacs" {
-  count  = 0
+  count  = 1
   source = "../modules/ec2s/linux/gromacs"
 
-  name              = "gromacs"
+  name              = "gromacs-${count.index}"
   ami               = "ami-0a7a4e87939439934"
   type              = "t4g.xlarge"
-  security_group_id = aws_security_group.ssh.id
-  subnet_id         = module.vpc.public_subnets[0]
+  security_group_id = aws_security_group.ssh[0].id
+  subnet_id         = module.vpc[0].public_subnets[0]
   ec2_key_name      = var.ec2_key_name
 }
 
