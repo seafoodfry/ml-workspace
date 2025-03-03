@@ -22,7 +22,7 @@ module "gromacs" {
   name              = "gromacs-${count.index}"
   ami               = "ami-0a7a4e87939439934"
   type              = "t4g.xlarge"
-  security_group_id = aws_security_group.ssh[0].id
+  security_group_id = aws_security_group.ssh_and_mpi[0].id
   subnet_id         = module.vpc[0].public_subnets[0]
   ec2_key_name      = var.ec2_key_name
 }
