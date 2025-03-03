@@ -16,7 +16,7 @@
 # tmux attach -t jupyter
 # tmux kill-session -t jupyter
 module "gromacs" {
-  count  = 1
+  count  = 2
   source = "../modules/ec2s/linux/gromacs"
 
   name              = "gromacs-${count.index}"
