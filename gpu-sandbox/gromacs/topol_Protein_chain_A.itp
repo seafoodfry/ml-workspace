@@ -1,19 +1,19 @@
 ;
 ;	File 'topol_Protein_chain_A.itp' was generated
 ;	By user: ubuntu (1000)
-;	On host: ip-10-0-101-64
-;	At date: Sun Mar  2 18:59:40 2025
+;	On host: ip-10-0-101-171
+;	At date: Tue Mar  4 05:28:42 2025
 ;
 ;	This is a include topology file
 ;
 ;	Created by:
 ;	                    :-) GROMACS - gmx pdb2gmx, 2025.0 (-:
 ;	
-;	Executable:   /usr/local/gromacs/bin/gmx
+;	Executable:   /usr/local/gromacs/bin/gmx_mpi
 ;	Data prefix:  /usr/local/gromacs
 ;	Working dir:  /home/ubuntu/src/gromacs
 ;	Command line:
-;	  gmx pdb2gmx -f 1fjs_protein.pdb -o 1fjs_processed.gro -water tip3p -ff charmm27
+;	  gmx_mpi pdb2gmx -f 1fjs_protein.pdb -o 1fjs_processed.gro -water tip3p -ff charmm27
 ;	Force field was read from the standard GROMACS share directory.
 ;
 
