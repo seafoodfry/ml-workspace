@@ -5,8 +5,10 @@
 # Workflow:
 #
 # ssh -L 8888:127.0.0.1:8888 ubuntu@${EC2}
-# rsync -rvzP gromacs ubuntu@${EC2}:/home/ubuntu/src
-# rsync -rvzP ubuntu@${EC2}:/home/ubuntu/src/gromacs . --exclude='.venv'
+# WORKDIR=/home/ubuntu/src
+# WORKDIR=/mnt/efs/src
+# rsync -rvzP gromacs ubuntu@${EC2}:${WORKDIR} --exclude='.venv'
+# rsync -rvzP ubuntu@${EC2}:${WORKDIR}/gromacs . --exclude='.venv'
 #
 # tmux new -s jupyter
 # uv run jupyter lab --ip=0.0.0.0
