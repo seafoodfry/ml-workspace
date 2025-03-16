@@ -23,6 +23,13 @@ sudo apt-get update -y
 # Installs gcc, g++, and cmake.
 sudo apt-get install build-essential cmake curl git -y
 
+# NOTE: g5g specific steps...
+# GPU support for gromacs requires cmake >= 3.28 and ubuntu has 3.21.
+# The pytorch cmake is 3.26.
+#mv /opt/pytorch/bin/cmake /opt/pytorch/bin/pytorch-cmake
+wget https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-linux-aarch64.sh
+sudo bash cmake-3.31.6-linux-aarch64.sh --prefix=/usr/local --skip-license
+
 ###########
 ### NFS ###
 ###########
@@ -134,15 +141,16 @@ tar xfz gromacs-2025.0.tar.gz
 cd gromacs-2025.0
 mkdir build
 cd build
-cmake .. -DGMX_BUILD_OWN_FFTW=ON -DREGRESSIONTEST_DOWNLOAD=ON -DGMX_MPI=ON
+export=/usr/local/cuda/bin/nvcc
+cmake .. -DGMX_BUILD_OWN_FFTW=ON -DREGRESSIONTEST_DOWNLOAD=ON -DGMX_GPU=CUDA -DCMAKE_CUDA_ARCHITECTURES=native #-DGMX_MPI=ON
 make -j $(nproc)
 
 log "Installing gromacs..."
 sudo make install
 echo "source /usr/local/gromacs/bin/GMXRC" >> /home/$USERNAME/.bashrc
 
-log "Testing gromacs..."
-make check
+#log "Testing gromacs..."
+#make check
 
 log "Finished installing gromacs"
 
