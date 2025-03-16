@@ -1,15 +1,15 @@
 ;
 ;	File 'mdout.mdp' was generated
 ;	By user: ubuntu (1000)
-;	On host: ip-10-0-101-31
-;	At date: Wed Mar  5 04:30:30 2025
+;	On host: ip-10-0-101-232
+;	At date: Thu Mar  6 04:20:27 2025
 ;
 ;	Created by:
 ;	                     :-) GROMACS - gmx grompp, 2025.0 (-:
 ;	
 ;	Executable:   /usr/local/gromacs/bin/gmx_mpi
 ;	Data prefix:  /usr/local/gromacs
-;	Working dir:  /home/ubuntu/src/gromacs
+;	Working dir:  /mnt/efs/src/gromacs
 ;	Command line:
 ;	  gmx_mpi grompp -f nvt-charmm.mdp -c em.gro -r em.gro -p topol.top -o nvt.tpr
 
@@ -25,7 +25,7 @@ integrator               = md
 ; Start time and timestep in ps
 tinit                    = 0
 dt                       = 0.002
-nsteps                   = 50000
+nsteps                   = 10000
 ; For exact run continuation or redoing part of a run
 init-step                = 0
 ; Part index is updated automatically on checkpointing (keeps files separate)
@@ -175,7 +175,7 @@ annealing-temp           =
 ; GENERATE VELOCITIES FOR STARTUP RUN
 gen_vel                  = yes
 gen_temp                 = 300
-gen-seed                 = -1099195953
+gen-seed                 = -1100513345
 
 ; OPTIONS FOR BONDS    
 constraints              = h-bonds
