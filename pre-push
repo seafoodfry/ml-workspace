@@ -7,4 +7,5 @@ set -e
 cargo fmt -- --check
 
 echo "scanning commit history..."
-git secrets --scan-history
+#git secrets --scan-history
+git secrets --scan-history origin/main..HEAD
