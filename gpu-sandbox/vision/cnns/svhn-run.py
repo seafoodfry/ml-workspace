@@ -46,17 +46,20 @@ def prep_data():
     test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
     return train_loader, test_loader
 
-def train_model(model, train_loader):
+def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
     # Move model to device.
     model = model.to(device)
 
     # Define loss function and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    if optimizer_state is not None:
+        optimizer.load_state_dict(optimizer_state)
 
     # Training loop.
     model.train()
     num_epochs = 10
+    last_epoch = checkpoint_epoch
     for epoch in range(num_epochs):
         running_loss = 0.0
         for batch_idx, (features, labels) in enumerate(train_loader):
@@ -75,18 +78,34 @@ def train_model(model, train_loader):
             running_loss += loss.item()
 
         # Print statistics.
-        print(f'Epoch {epoch+1}/{num_epochs}, Loss: {running_loss/len(train_loader):.5f}')
+        last_epoch += 1
+        print(f'Epoch {last_epoch}/{num_epochs}, Loss: {running_loss/len(train_loader):.5f}')
         
 
+    #avg_loss = running_loss / len(train_loader)
     model.eval()
-    return model
+    return model, optimizer, last_epoch
 
 if '__name__' == '__name__':
     """
     uv run python cnns/svhn-run.py
     """
+    cm_img = 'deepercn_cm.png'
+    model_weights = 'deepcnn_model.pth'
+    model_checkpoint = 'deepcnn_checkpoint.pth'
+
     print('Creating model...')
     model = DeeperCNN()
+    epoch = 0
+    optimizer_state = None
+    if os.path.exists(model_weights):
+        print(f'found: {model_weights=} and {model_checkpoint=}...')
+        model.load_state_dict(torch.load(model_weights, map_location=device))
+
+        checkpoint = torch.load(model_checkpoint, map_location=device)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer_state = checkpoint['optimizer_state_dict']
+        epoch = checkpoint['epoch']
     print('Created model')
 
     print('Gathering data...')
@@ -94,9 +113,18 @@ if '__name__' == '__name__':
     print('Gathered data')
 
     print('Training model...')
-    model = train_model(model, train_loader)
+    model, optimizer, epoch = train_model(model, train_loader, epoch)
     print('Trained model')
+
+    print('Saving model...')
+    torch.save(model.state_dict(), model_weights)
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'epoch': epoch,
+    }, model_checkpoint)
+    print('saved model')
 
     print('Evaluating model...')
     predictions, true_labels, accuracy = evaluate_model(model, test_loader, device)
-    save_confusion_matrix(true_labels, predictions, accuracy, 'deepercn_cm.png')
+    save_confusion_matrix(true_labels, predictions, accuracy, cm_img)
