@@ -46,8 +46,8 @@ def prep_data():
         transform=transform,
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True) #, num_workers=os.cpu_count())
-    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True) #, num_workers=os.cpu_count())
+    test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
     return train_loader, test_loader
 
 def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):

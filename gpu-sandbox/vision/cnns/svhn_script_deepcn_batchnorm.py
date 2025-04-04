@@ -22,24 +22,28 @@ class DeeperCNN(nn.Module):
         self.features = nn.Sequential(
             # First block conv: 3 (RGB) -> 32 channels.
             nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
             # First block pooling: 32x32 (height,width) -> 16x16x.
             nn.MaxPool2d(kernel_size=2, stride=2),
             
             # Second block conv: 32 channels -> 64 channels.
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             # Second block pooling: 16x16 (height,width) -> 8x8.
             nn.MaxPool2d(kernel_size=2, stride=2),
             
             # Third block conv: 64 channels -> 128 channels.
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
             # Third block pooling: 8x8 (height,width) -> 4x4.
             nn.MaxPool2d(kernel_size=2, stride=2),
             
             # Fourth block: 128 -> 256 channels AND 4x4 -> 2x2.
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
