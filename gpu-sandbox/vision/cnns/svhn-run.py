@@ -7,7 +7,8 @@ from torch.utils.data import DataLoader
 import os
 
 from model_eval import evaluate_model, save_confusion_matrix
-from svhn_script_deepercn import DeeperCNN
+#from svhn_script_deepercn import DeeperCNN
+from svhn_script_deepcn_batchnorm import DeeperCNN
 
 
 if torch.cuda.is_available():
@@ -21,6 +22,9 @@ device = torch.device(_device)
 
 def prep_data():
     transform = transforms.Compose([
+        transforms.RandomRotation(10),
+        transforms.RandomAffine(0, translate=(0.1, 0.1)),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2),
         transforms.ToTensor(),
         transforms.Normalize(
             (0.4377, 0.4438, 0.4728),
@@ -42,8 +46,8 @@ def prep_data():
         transform=transform,
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True) #, num_workers=os.cpu_count())
-    test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True) #, num_workers=os.cpu_count())
+    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
     return train_loader, test_loader
 
 def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
