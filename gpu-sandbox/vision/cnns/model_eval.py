@@ -30,7 +30,7 @@ def evaluate_model(model, test_loader, device):
             all_labels.extend(labels.cpu().numpy())
     
     accuracy = 100 * correct / total
-    print(f'Test Accuracy: {accuracy:.2f}%')
+    print(f'Accuracy: {accuracy:.2f}%')
     
     return all_preds, all_labels, accuracy
 

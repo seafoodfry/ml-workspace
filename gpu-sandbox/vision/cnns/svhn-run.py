@@ -5,9 +5,11 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 import os
+import time
 
 from model_eval import evaluate_model, save_confusion_matrix
-from svhn_script_deepercn import DeeperCNN
+#from svhn_script_deepercn import DeeperCNN
+from svhn_script_deepcn_batchnorm import DeeperCNN
 
 
 if torch.cuda.is_available():
@@ -17,10 +19,13 @@ elif torch.backends.mps.is_available():
 else:
     _device = 'cpu'
 device = torch.device(_device)
-
+print(f'{device=}')
 
 def prep_data():
     transform = transforms.Compose([
+        transforms.RandomRotation(10),
+        transforms.RandomAffine(0, translate=(0.1, 0.1)),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2),
         transforms.ToTensor(),
         transforms.Normalize(
             (0.4377, 0.4438, 0.4728),
@@ -41,9 +46,11 @@ def prep_data():
         download=True, 
         transform=transform,
     )
+    print(f'{len(train_dataset)=:_}, {len(test_dataset)=:_}')
 
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True) #, num_workers=os.cpu_count())
-    test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
+    batch_size = 512 * 2
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True) #, num_workers=os.cpu_count())
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     return train_loader, test_loader
 
 def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
@@ -58,11 +65,14 @@ def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
 
     # Training loop.
     model.train()
-    num_epochs = 10
+    num_epochs = 5#0
     last_epoch = checkpoint_epoch
     for epoch in range(num_epochs):
+        start = time.perf_counter()
         running_loss = 0.0
         for batch_idx, (features, labels) in enumerate(train_loader):
+            if batch_idx == 0:
+                print(f'{len(features)=}')
             features, labels = features.to(device), labels.to(device)
             
             # Zero the gradients.
@@ -79,6 +89,8 @@ def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
 
         # Print statistics.
         last_epoch += 1
+        end = time.perf_counter()
+        print(f"Elapsed time: {end - start:.6f} seconds")
         print(f'Epoch {last_epoch}/{num_epochs}, Loss: {running_loss/len(train_loader):.5f}')
         
 
@@ -125,6 +137,8 @@ if '__name__' == '__name__':
     }, model_checkpoint)
     print('saved model')
 
-    print('Evaluating model...')
+    print('Evaluating model on training set...')
+    evaluate_model(model, train_loader, device)
+    print('Evaluating model on test set...')
     predictions, true_labels, accuracy = evaluate_model(model, test_loader, device)
     save_confusion_matrix(true_labels, predictions, accuracy, cm_img)
