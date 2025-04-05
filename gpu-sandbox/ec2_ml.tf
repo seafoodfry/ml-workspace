@@ -17,9 +17,12 @@
 # rsync -rvzP ubuntu@${EC2}:/home/ubuntu/llm-book/ ./llm-book
 # scp ubuntu@${EC2}:/home/ubuntu/llm-book/pytorch-101.ipynb ./llm-book
 #
+# tmux attach -t jupyter
 # source /opt/pytorch/bin/activate
 #
 # rsync -rvzP ubuntu@${EC2}:/home/ubuntu/src/ ./vision/cnns --exclude='data'
+# rsync -rvzP ./vision/cnns/ ubuntu@${EC2}:/home/ubuntu/src/ --exclude='data'
+# scp ubuntu@${EC2}:/home/ubuntu/src/deepercn_cm.png .
 module "linux_gpu_pytorch" {
   count  = 1
   source = "../modules/ec2s/linux/gpu"

@@ -9,7 +9,8 @@ import time
 
 from model_eval import evaluate_model, save_confusion_matrix
 #from svhn_script_deepercn import DeeperCNN
-from svhn_script_deepcn_batchnorm import DeeperCNN
+#from svhn_script_deepcn_batchnorm import DeeperCNN
+from svhn_script_even_deepercnn import DeeperCNN
 
 
 if torch.cuda.is_available():
@@ -59,13 +60,13 @@ def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
 
     # Define loss function and optimizer
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
     if optimizer_state is not None:
         optimizer.load_state_dict(optimizer_state)
 
     # Training loop.
     model.train()
-    num_epochs = 5#0
+    num_epochs = 10
     last_epoch = checkpoint_epoch
     for epoch in range(num_epochs):
         start = time.perf_counter()
