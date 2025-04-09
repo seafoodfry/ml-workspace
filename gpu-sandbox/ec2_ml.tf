@@ -23,6 +23,8 @@
 # rsync -rvzP ubuntu@${EC2}:/home/ubuntu/src/ ./vision/cnns --exclude='data'
 # rsync -rvzP ./vision/cnns/ ubuntu@${EC2}:/home/ubuntu/src/ --exclude='data'
 # scp ubuntu@${EC2}:/home/ubuntu/src/deepercn_cm.png .
+# scp ubuntu@${EC2}:/home/ubuntu/src/deepcnn_checkpoint.pth ./vision/cnns/trained
+# scp ubuntu@${EC2}:/home/ubuntu/src/deepcnn_model.pth ./vision/cnns/trained
 module "linux_gpu_pytorch" {
   count  = 1
   source = "../modules/ec2s/linux/gpu"

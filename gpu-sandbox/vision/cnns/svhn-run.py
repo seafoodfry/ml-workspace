@@ -73,7 +73,7 @@ def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
         running_loss = 0.0
         for batch_idx, (features, labels) in enumerate(train_loader):
             if batch_idx == 0:
-                print(f'{len(features)=}')
+                print(f'{features.shape=}')
             features, labels = features.to(device), labels.to(device)
             
             # Zero the gradients.

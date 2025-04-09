@@ -1,3 +1,66 @@
+"""
+    With ksize == 3:
+
+Elapsed time: 58.647182 seconds
+Epoch 2/10, Loss: 0.76380
+
+    After 10 iterations:
+
+Evaluating model on training set...
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 72/72 [00:53<00:00,  1.34it/s]
+Accuracy: 93.82%
+Evaluating model on test set...
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 26/26 [00:18<00:00,  1.41it/s]
+Accuracy: 93.57%
+
+    Epoch 20/10, Loss: 0.19923
+Evaluating model on training set...
+Accuracy: 95.81%
+Evaluating model on test set...
+Accuracy: 95.13%
+
+Epoch 30/10, Loss: 0.16842
+Evaluating model on training set...
+Accuracy: 96.38%
+Evaluating model on test set...
+Accuracy: 95.01%
+
+Epoch 40/10, Loss: 0.14084
+Evaluating model on training set...
+Accuracy: 97.02%
+Evaluating model on test set...
+Accuracy: 95.18%
+
+Epoch 50/10, Loss: 0.12308
+Evaluating model on training set...
+Accuracy: 97.70%
+Evaluating model on test set...
+Accuracy: 95.13%
+
+Epoch 60/10, Loss: 0.10609
+Accuracy: 98.06%
+Accuracy: 95.68%
+
+Epoch 70/10, Loss: 0.09105
+Accuracy: 98.39%
+Accuracy: 95.54%
+
+Epoch 80/10, Loss: 0.08366
+Accuracy: 98.75%
+Accuracy: 95.74%
+
+Epoch 90/10, Loss: 0.07418
+Accuracy: 98.77%
+Accuracy: 95.77%
+
+Epoch 100/10, Loss: 0.06664
+Accuracy: 98.86%
+Accuracy: 95.65%
+
+Epoch 110/10, Loss: 0.06104
+Accuracy: 99.14%
+Accuracy: 95.51%
+"""
 import torch.nn as nn
 
 
@@ -19,7 +82,7 @@ class DeeperCNN(nn.Module):
         """
         super().__init__()
 
-        kernel_size = 5
+        kernel_size = 3
         padding = (kernel_size - 1) // 2
         print(f'CNN: using {kernel_size=} and {padding=}')
 
