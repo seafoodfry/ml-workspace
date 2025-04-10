@@ -1,16 +1,19 @@
+"""
+uv run python cnns/digit-run.py
+"""
 import torch
 import torch.nn as nn
 
 import torchvision
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset, ConcatDataset
+import scipy.io as sio
+import numpy as np
 import os
 import time
 
 from model_eval import evaluate_model, save_confusion_matrix
-#from svhn_script_deepercn import DeeperCNN
-#from svhn_script_deepcn_batchnorm import DeeperCNN
-from svhn_script_even_deepercnn import DeeperCNN
+from svhn_script_digit_detector import DigitDetector
 
 
 if torch.cuda.is_available():
@@ -22,12 +25,70 @@ else:
 device = torch.device(_device)
 print(f'{device=}')
 
-def prep_data():
+
+class NegativeSamplesDataset(Dataset):
+    def __init__(self, mat_file, transform=None):
+        """
+        Dataset for loading negative samples from a .mat file
+        
+        Args:
+            mat_file (str): Path to the .mat file containing negative samples
+            transform: Optional transforms to apply to the samples
+        """
+        self.transform = transform
+
+        # Load the data from the .mat file.
+        mat_data = sio.loadmat(mat_file)
+
+        # X has shape (32, 32, 3, n_samples) - need to transpose.
+        self.X = mat_data['X'].transpose(3, 2, 0, 1)  # Now (n_samples, 3, 32, 32).
+        self.y = mat_data['y'].flatten()  # Labels.
+
+    def __len__(self):
+        return len(self.y)
+
+    def __getitem__(self, idx):
+        # Get the image and label at the given index.
+        image = self.X[idx].astype('float32') / 255.0  # Normalize to [0, 1].
+        label = int(self.y[idx])
+
+        image_tensor = torch.from_numpy(image)
+        image_tensor = self.transform(image_tensor)
+            
+        return image_tensor, label
+    
+
+class BinaryDigitDataset(Dataset):
+    def __init__(self, dataset, is_digit=True, transform=None):
+        self.dataset = dataset
+        self.is_digit = is_digit
+        self.transform = transform
+    
+    def __len__(self):
+        return len(self.dataset)
+    
+    def __getitem__(self, idx):
+        image, original_label = self.dataset[idx]
+        # Convert to binary label: 1 for digit, 0 for non-digit
+        binary_label = 1 if self.is_digit else 0
+        
+        return image, binary_label
+
+
+def prep_data(negative_mat_file='./cnns/negative_samples.mat'):
     transform = transforms.Compose([
         transforms.RandomRotation(10),
         transforms.RandomAffine(0, translate=(0.1, 0.1)),
         transforms.ColorJitter(brightness=0.2, contrast=0.2),
         transforms.ToTensor(),
+        transforms.Normalize(
+            (0.4377, 0.4438, 0.4728),
+            (0.1980, 0.2010, 0.1970),
+        )
+    ])
+
+    negative_transform = transforms.Compose([
+        transforms.ColorJitter(brightness=0.2, contrast=0.2),
         transforms.Normalize(
             (0.4377, 0.4438, 0.4728),
             (0.1980, 0.2010, 0.1970),
@@ -49,9 +110,37 @@ def prep_data():
     )
     print(f'{len(train_dataset)=:_}, {len(test_dataset)=:_}')
 
-    batch_size = 512 * 2
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True) #, num_workers=os.cpu_count())
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    negative_dataset = NegativeSamplesDataset(
+        negative_mat_file,
+        transform=negative_transform
+    )
+
+    # Convert to binary datasets.
+    binary_svhn_train = BinaryDigitDataset(train_dataset, is_digit=True)
+    binary_svhn_test = BinaryDigitDataset(test_dataset, is_digit=True)
+    binary_negative_train = BinaryDigitDataset(negative_dataset, is_digit=False)
+
+    # Split the negative samples for training and testing.
+    # Use random_split to split the negative dataset.
+    neg_size = len(negative_dataset)
+    train_size = int(0.7 * neg_size)
+    test_size = neg_size - train_size
+    neg_train, neg_test = torch.utils.data.random_split(
+        binary_negative_train, [train_size, test_size]
+    )
+
+    # Combine datasets for training and testing.
+    binary_train_dataset = ConcatDataset([binary_svhn_train, neg_train])
+    binary_test_dataset = ConcatDataset([binary_svhn_test, neg_test])
+    
+    print(f'Training set: {len(binary_svhn_train):_} digits + {len(neg_train):_} non-digits')
+    print(f'Test set: {len(binary_svhn_test):_} digits + {len(neg_test):_} non-digits')
+    
+
+    #batch_size = 512 * 2
+    batch_size = 32
+    train_loader = DataLoader(binary_train_dataset, batch_size=batch_size, shuffle=True) #, num_workers=os.cpu_count())
+    test_loader = DataLoader(binary_test_dataset, batch_size=batch_size, shuffle=False)
     return train_loader, test_loader
 
 def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
@@ -66,7 +155,7 @@ def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
 
     # Training loop.
     model.train()
-    num_epochs = 10
+    num_epochs = 2
     last_epoch = checkpoint_epoch
     for epoch in range(num_epochs):
         start = time.perf_counter()
@@ -101,14 +190,14 @@ def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
 
 if '__name__' == '__name__':
     """
-    uv run python cnns/svhn-run.py
+    uv run python cnns/digit-run.py
     """
-    cm_img = 'deepercn_cm.png'
-    model_weights = 'deepcnn_model.pth'
-    model_checkpoint = 'deepcnn_checkpoint.pth'
+    cm_img = 'digit_cm.png'
+    model_weights = 'digit_model.pth'
+    model_checkpoint = 'digit_checkpoint.pth'
 
     print('Creating model...')
-    model = DeeperCNN()
+    model = DigitDetector()
     epoch = 0
     optimizer_state = None
     if os.path.exists(model_weights):
