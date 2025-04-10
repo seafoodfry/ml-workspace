@@ -3,6 +3,9 @@
 """
 import cv2
 import torch
+import matplotlib.pyplot as plt
+import numpy as np
+import os
 
 from svhn_script_even_deepercnn import DeeperCNN
 from svhn_script_digit_detector import DigitDetector
@@ -36,7 +39,14 @@ def is_really_a_digit(probabilities):
     # (Tune this threshold on your validation set)
     return ratio #> 3.0  # Example threshold
 
-def clf_sliding_window(model, clf_model, img, delay=5, confidence_threshold=0.5):
+def clf_sliding_window(is_digit_model, clf_model, img, delay=5, confidence_threshold=0.5):
+    save_dir = './tmp'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    else:
+        for f in os.listdir(save_dir):
+            os.remove(os.path.join(save_dir, f))
+
     # Create a named window for the zoomed patch nd
     # resize the window (adjust size as needed).
     cv2.namedWindow("Current Window", cv2.WINDOW_AUTOSIZE)
@@ -50,6 +60,8 @@ def clf_sliding_window(model, clf_model, img, delay=5, confidence_threshold=0.5)
     window_size = 32
     stride = 8
     original_delay = delay
+    confidence_map = np.zeros((height, width))
+    digit_count = 0
     for y in range(0, height - window_size, stride):                
             for x in range(0, width - window_size, stride):
                 # Start with a fresh copy for this iteration.
@@ -65,18 +77,26 @@ def clf_sliding_window(model, clf_model, img, delay=5, confidence_threshold=0.5)
                 window_tensor = window_tensor.unsqueeze(0).to(device)
                 window_tensor = (window_tensor - mean) / std
 
-                # Run the classifier.
+                # Run the digit detector.
                 # The output tensor has shape [batch_size, num_classes]
                 # Dimension 0 is the batch dimension.
                 # Dimension 1 is the class dimension.
                 with torch.no_grad():
-                    outputs = model(window_tensor)
-                    print(f'-> {outputs=}')
+                    outputs = is_digit_model(window_tensor)
+                    #print(f'-> {outputs=}')
                     probabilities = torch.nn.functional.softmax(outputs, dim=1)
                     confidence, prediction = torch.max(probabilities, 1)
                     confidence = confidence.item()
                     prediction = prediction.item()
+                    digit_prob = probabilities[0, 1].item()
+                    if digit_prob > confidence_threshold:
+                        print(f"Digit probability = {digit_prob:.5f} {prediction=}")
 
+                confidence_map[y:y+window_size, x:x+window_size] = np.maximum(
+                    confidence_map[y:y+window_size, x:x+window_size], 
+                    digit_prob
+                )
+                
                 # 1 is for digits.
                 is_digit = False
                 if confidence > confidence_threshold and prediction == 1:
@@ -85,16 +105,48 @@ def clf_sliding_window(model, clf_model, img, delay=5, confidence_threshold=0.5)
                     print(f'{prediction=} {confidence=:.3f}')
                     is_digit = True
 
+                    # Run the digit classifier.
                     with torch.no_grad():
                         outputs = clf_model(window_tensor)
                         print(f'---> {outputs=}')
-                        probabilities = torch.nn.functional.softmax(outputs, dim=1)
-                        confidence, prediction = torch.max(probabilities, 1)
-                        confidence = confidence.item()
-                        prediction = prediction.item()
-                        print(f'DIGIT PRED: {prediction=} {confidence=:.3f}')
-                #print(f'> {prediction=} {confidence=:.3f}')
+                        digit_probs = torch.nn.functional.softmax(outputs, dim=1)
+                        digit_confidence, digit_prediction = torch.max(digit_probs, 1)
+                        digit_confidence = digit_confidence.item()
+                        digit_prediction = digit_prediction.item()
+                        print(f'DIGIT PRED: {digit_prediction=} {digit_confidence=:.3f}')
 
+                if is_digit:
+                    digit_count += 1
+                    # Create a figure with two subplots.
+                    plt.figure(figsize=(12, 6))
+                    
+                    # Plot the digit image.
+                    plt.subplot(1, 2, 1)
+                    plt.imshow(window_rgb)
+                    plt.title(f"Detected Digit: {digit_prediction}")
+                    plt.axis('off')
+   
+                    # Plot the probability distribution.
+                    plt.subplot(1, 2, 2)
+                    probs_np = digit_probs[0].cpu().numpy()
+                    plt.bar(range(10), probs_np)
+                    plt.xticks(range(10))
+                    plt.xlabel('Digit Class')
+                    plt.ylabel('Probability')
+                    plt.title(f'Probability Distribution')
+
+                    # Add text annotation with location and confidence
+                    plt.figtext(0.5, 0.01, 
+                               f"Position: ({x}, {y}), Is digit confidence: {digit_prob:.3f}",
+                               ha="center", fontsize=10)
+
+                    # Save the figure
+                    save_path = os.path.join(save_dir, f"digit_{digit_count:04d}_pred{digit_prediction}_x{x}_y{y}.png")
+                    plt.savefig(save_path)
+                    plt.close()
+                    # Also save the raw window image for later use if needed
+                    #cv2.imwrite(os.path.join(save_dir, f"digit_{digit_count:04d}_raw.png"), window)
+                    
 
                 # Draw rectangle.
                 top_left = (x, y)
@@ -121,6 +173,12 @@ def clf_sliding_window(model, clf_model, img, delay=5, confidence_threshold=0.5)
                     break
     
     cv2.destroyAllWindows()
+    plt.figure(figsize=(10, 8))
+    plt.imshow(original_img[:, :, ::-1])  # Convert BGR to RGB for display
+    plt.imshow(confidence_map, alpha=0.5, cmap='hot')
+    plt.colorbar(label='Digit Confidence')
+    plt.title('Digit Detection Confidence Map')
+    plt.savefig('confidence_heatmap.png')
 
 def build_pyramid(image, levels=3):
     """
@@ -135,6 +193,21 @@ def build_pyramid(image, levels=3):
         img = cv2.pyrDown(img)
         pyramid.append(img)
     return pyramid
+
+def resize_image_by_factor(image, scale_factor):
+    new_height = int(image.shape[0] * scale_factor)
+    new_width = int(image.shape[1] * scale_factor)
+
+    # Choose appropriate interpolation method based on scaling direction.
+    if scale_factor < 1:  # Downsampling
+        interp = cv2.INTER_AREA  # Better for reducing image size
+    else:  # Upsampling
+        interp = cv2.INTER_LINEAR  # Better for increasing image size
+    
+    #image = cv2.bilateralFilter(image, 9, 15, 15)
+    image = cv2.filter2D(image, -1, np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]]))
+
+    return cv2.resize(image, (new_width, new_height), interpolation=interp)
 
 if __name__ == "__main__":
     print(halp)
@@ -155,10 +228,13 @@ if __name__ == "__main__":
 
     # Load images to classify.
     # Update the path.
-    img_path = './img/015-images/six.jpg'
+    img_path = './img/015-images/sample2.jpg'
+    #img_path = './cnns/img/sample1.png'
     img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
 
-    downsample_pyr = build_pyramid(img, levels=3)
-    delays = [1, 20, 50]
-    for pimg, delay in zip(downsample_pyr, delays):
-        clf_sliding_window(digit_model, model, pimg, delay=delay)
+    #downsample_pyr = build_pyramid(img, levels=4)
+    #delays = [1, 20, 5, 1]
+    #for pimg, delay in zip(downsample_pyr, delays):
+    pimg = resize_image_by_factor(img, 1/4)
+    delay = 1
+    clf_sliding_window(digit_model, model, pimg, delay=delay, confidence_threshold=0.005)

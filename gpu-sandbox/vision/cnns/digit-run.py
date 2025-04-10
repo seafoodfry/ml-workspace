@@ -77,18 +77,16 @@ class BinaryDigitDataset(Dataset):
 
 def prep_data(negative_mat_file='./cnns/negative_samples.mat'):
     transform = transforms.Compose([
-        transforms.RandomRotation(10),
-        transforms.RandomAffine(0, translate=(0.1, 0.1)),
-        transforms.ColorJitter(brightness=0.2, contrast=0.2),
+        #transforms.RandomRotation(10),
+        #transforms.RandomAffine(0, translate=(0.1, 0.1)),
+        #transforms.ColorJitter(brightness=0.1, contrast=0.1),
         transforms.ToTensor(),
         transforms.Normalize(
             (0.4377, 0.4438, 0.4728),
             (0.1980, 0.2010, 0.1970),
         )
     ])
-
-    negative_transform = transforms.Compose([
-        transforms.ColorJitter(brightness=0.2, contrast=0.2),
+    negative_data_transform = transforms.Compose([
         transforms.Normalize(
             (0.4377, 0.4438, 0.4728),
             (0.1980, 0.2010, 0.1970),
@@ -112,7 +110,7 @@ def prep_data(negative_mat_file='./cnns/negative_samples.mat'):
 
     negative_dataset = NegativeSamplesDataset(
         negative_mat_file,
-        transform=negative_transform
+        transform=negative_data_transform
     )
 
     # Convert to binary datasets.
@@ -123,7 +121,7 @@ def prep_data(negative_mat_file='./cnns/negative_samples.mat'):
     # Split the negative samples for training and testing.
     # Use random_split to split the negative dataset.
     neg_size = len(negative_dataset)
-    train_size = int(0.7 * neg_size)
+    train_size = int(0.3 * neg_size)
     test_size = neg_size - train_size
     neg_train, neg_test = torch.utils.data.random_split(
         binary_negative_train, [train_size, test_size]
@@ -155,7 +153,7 @@ def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
 
     # Training loop.
     model.train()
-    num_epochs = 2
+    num_epochs = 3
     last_epoch = checkpoint_epoch
     for epoch in range(num_epochs):
         start = time.perf_counter()

@@ -24,9 +24,9 @@ print(f'{device=}')
 
 def prep_data():
     transform = transforms.Compose([
-        transforms.RandomRotation(10),
-        transforms.RandomAffine(0, translate=(0.1, 0.1)),
-        transforms.ColorJitter(brightness=0.2, contrast=0.2),
+        #transforms.RandomRotation(10),
+        #transforms.RandomAffine(0, translate=(0.1, 0.1)),
+        #transforms.ColorJitter(brightness=0.2, contrast=0.2),
         transforms.ToTensor(),
         transforms.Normalize(
             (0.4377, 0.4438, 0.4728),
@@ -66,7 +66,7 @@ def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
 
     # Training loop.
     model.train()
-    num_epochs = 10
+    num_epochs = 60
     last_epoch = checkpoint_epoch
     for epoch in range(num_epochs):
         start = time.perf_counter()
