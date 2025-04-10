@@ -24,6 +24,17 @@ Press:
 - m to reset the cv2.waitKey delay
 """
 
+def is_really_a_digit(probabilities):
+    # Get top two probabilities
+    top_probs, _ = torch.topk(probabilities, 2)
+    
+    # Calculate the ratio between top probability and runner-up
+    ratio = top_probs[0] / (top_probs[1] + 1e-6)
+    
+    # Real digits typically have a much higher ratio
+    # (Tune this threshold on your validation set)
+    return ratio #> 3.0  # Example threshold
+
 def clf_sliding_window(model, img, delay=5, confidence_threshold=0.97):
     # Create a named window for the zoomed patch nd
     # resize the window (adjust size as needed).
@@ -61,7 +72,8 @@ def clf_sliding_window(model, img, delay=5, confidence_threshold=0.97):
                     prediction = prediction.item()
 
                 if confidence > confidence_threshold:
-                     print(f'{prediction=} {confidence=:.3f}')
+                    ratio = is_really_a_digit(probabilities[0])
+                    print(f'{prediction=} {confidence=:.3f} -> {ratio=:.3f}')
 
                 # Draw rectangle.
                 top_left = (x, y)
