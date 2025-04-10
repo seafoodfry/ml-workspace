@@ -123,7 +123,7 @@ def prep_data(negative_mat_file='./cnns/negative_samples.mat'):
     # Split the negative samples for training and testing.
     # Use random_split to split the negative dataset.
     neg_size = len(negative_dataset)
-    train_size = int(0.8 * neg_size)
+    train_size = int(0.7 * neg_size)
     test_size = neg_size - train_size
     neg_train, neg_test = torch.utils.data.random_split(
         binary_negative_train, [train_size, test_size]
