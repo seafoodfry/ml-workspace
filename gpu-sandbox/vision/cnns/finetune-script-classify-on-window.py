@@ -91,10 +91,10 @@ def clf_sliding_window(clf_model, img, delay=5, confidence_threshold=0.5):
                 
                 # 1 is for digits.
                 is_digit = False
-                if confidence > confidence_threshold and prediction != 10:
+                if confidence >= confidence_threshold and prediction != 10:
                     #ratio = is_really_a_digit(probabilities[0])
                     #print(f'{prediction=} {confidence=:.3f} -> {ratio=:.3f}')
-                    print(f'{prediction=} {confidence=:.3f}')
+                    print(f'{prediction=} {confidence=:.5f} at {x}, {y}')
                     is_digit = True
 
                 if is_digit:
@@ -119,7 +119,7 @@ def clf_sliding_window(clf_model, img, delay=5, confidence_threshold=0.5):
 
                     # Add text annotation with location and confidence
                     plt.figtext(0.5, 0.01, 
-                               f"Position: ({x}, {y}), confidence: {confidence:.3f}",
+                               f"Position: ({x}, {y}), confidence: {confidence:.6f}",
                                ha="center", fontsize=10)
 
                     # Save the figure
@@ -140,7 +140,7 @@ def clf_sliding_window(clf_model, img, delay=5, confidence_threshold=0.5):
                 cv2.imshow("Sliding Window", display_img)    
                 cv2.imshow("Current Window", window)
                 if is_digit:
-                    delay = 1_000
+                    delay = 1#_000
                 key = cv2.waitKey(delay)
                 if key == ord('q') or key == ord('n'):
                     break
@@ -182,7 +182,8 @@ def resize_image_by_factor(image, scale_factor):
         interp = cv2.INTER_LINEAR  # Better for increasing image size
     
     #image = cv2.bilateralFilter(image, 9, 15, 15)
-    image = cv2.filter2D(image, -1, np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]]))
+    #image = cv2.filter2D(image, -1, np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]]))
+    image = cv2.GaussianBlur(image, (5,5), 1)
 
     return cv2.resize(image, (new_width, new_height), interpolation=interp)
 
@@ -199,13 +200,16 @@ if __name__ == "__main__":
 
     # Load images to classify.
     # Update the path.
-    img_path = './cnns/img/buildings-finetune/img-02.jpg'
+    img_path = './cnns/img/buildings-finetune/sample1.jpg'
     img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
 
     downsample_pyr = build_pyramid(img, levels=3)
     #delays = [1, 20, 5, 1]
     #for pimg, delay in zip(downsample_pyr, delays):
     #pimg = downsample_pyr[-1]
+    """
     pimg = resize_image_by_factor(img, 1/3)
-    delay = 1
-    clf_sliding_window(model, pimg, delay=delay, confidence_threshold=0.005)
+    clf_sliding_window(model, pimg, delay=1, confidence_threshold=1.0)
+    """
+    pimg = resize_image_by_factor(img, 1/2)
+    clf_sliding_window(model, pimg, delay=1, confidence_threshold=1.0)
