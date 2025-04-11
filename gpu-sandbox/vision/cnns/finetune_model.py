@@ -16,6 +16,22 @@ Accuracy: 95.19%
 Epoch 120/20, Loss: 0.01115
 Accuracy: 99.99%
 Accuracy: 95.44%
+
+Epoch 140/20, Loss: 0.00961
+Accuracy: 99.99%
+Accuracy: 95.34%
+
+Epoch 160/20, Loss: 0.00606
+Accuracy: 99.99%
+Accuracy: 95.24%
+
+Epoch 180/20, Loss: 0.00743
+Accuracy: 99.97%
+Accuracy: 95.15%
+
+Epoch 200/20, Loss: 0.00621
+Accuracy: 99.99%
+Accuracy: 95.33%
 """
 import torch.nn as nn
 
