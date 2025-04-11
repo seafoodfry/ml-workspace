@@ -139,7 +139,7 @@ def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
 
     # Define loss function and optimizer
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-5)
     if optimizer_state is not None:
         optimizer.load_state_dict(optimizer_state)
 

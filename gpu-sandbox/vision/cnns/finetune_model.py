@@ -1,5 +1,21 @@
 """
+Epoch 60/60, Loss: 0.01524
+Evaluating model on training set...
+Accuracy: 99.92%
+Evaluating model on test set...
+Accuracy: 95.10%
 
+Epoch 80/20, Loss: 0.01354
+Accuracy: 99.96%
+Accuracy: 95.18%
+
+Epoch 100/20, Loss: 0.01137
+Accuracy: 99.97%
+Accuracy: 95.19%
+
+Epoch 120/20, Loss: 0.01115
+Accuracy: 99.99%
+Accuracy: 95.44%
 """
 import torch.nn as nn
 
