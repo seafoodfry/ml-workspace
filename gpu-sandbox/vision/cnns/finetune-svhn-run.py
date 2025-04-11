@@ -3,14 +3,14 @@ import torch.nn as nn
 
 import torchvision
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset, ConcatDataset
+import scipy.io as sio
+import numpy as np
 import os
 import time
 
 from model_eval import evaluate_model, save_confusion_matrix
-#from svhn_script_deepercn import DeeperCNN
-#from svhn_script_deepcn_batchnorm import DeeperCNN
-from svhn_script_even_deepercnn import DeeperCNN
+from finetune_model import CNN
 
 
 if torch.cuda.is_available():
@@ -22,12 +22,72 @@ else:
 device = torch.device(_device)
 print(f'{device=}')
 
-def prep_data():
+
+class SVHNWithNegativesDataset(Dataset):
+    def __init__(self, svhn_dataset, negative_dataset, transform=None):
+        self.svhn_dataset = svhn_dataset
+        self.negative_dataset = negative_dataset
+        self.transform = transform
+    
+    def __len__(self):
+        return len(self.svhn_dataset) + len(self.negative_dataset)
+    
+    def __getitem__(self, idx):
+        if idx < len(self.svhn_dataset):
+            # This is an SVHN sample
+            image, label = self.svhn_dataset[idx]
+            return image, label
+        else:
+            # This is a negative sample - use index 10 for "not a digit"
+            neg_idx = idx - len(self.svhn_dataset)
+            image, _ = self.negative_dataset[neg_idx]
+            return image, 10  # 10 is our "not a digit" class
+
+
+class NegativeSamplesDataset(Dataset):
+    def __init__(self, mat_file, transform=None):
+        """
+        Dataset for loading negative samples from a .mat file
+        
+        Args:
+            mat_file (str): Path to the .mat file containing negative samples
+            transform: Optional transforms to apply to the samples
+        """
+        self.transform = transform
+
+        # Load the data from the .mat file.
+        mat_data = sio.loadmat(mat_file)
+
+        # X has shape (32, 32, 3, n_samples) - need to transpose.
+        self.X = mat_data['X'].transpose(3, 2, 0, 1)  # Now (n_samples, 3, 32, 32).
+        self.y = mat_data['y'].flatten()  # Labels.
+
+    def __len__(self):
+        return len(self.y)
+
+    def __getitem__(self, idx):
+        # Get the image and label at the given index.
+        image = self.X[idx].astype('float32') / 255.0  # Normalize to [0, 1].
+        label = int(self.y[idx])
+
+        image_tensor = torch.from_numpy(image)
+        image_tensor = self.transform(image_tensor)
+            
+        return image_tensor, label
+
+
+def prep_data(negative_mat_file='./cnns/negative_samples_finetune.mat'):
     transform = transforms.Compose([
         #transforms.RandomRotation(10),
         #transforms.RandomAffine(0, translate=(0.1, 0.1)),
         #transforms.ColorJitter(brightness=0.2, contrast=0.2),
         transforms.ToTensor(),
+        transforms.Normalize(
+            (0.4377, 0.4438, 0.4728),
+            (0.1980, 0.2010, 0.1970),
+        )
+    ])
+    negative_data_transform = transforms.Compose([
         transforms.Normalize(
             (0.4377, 0.4438, 0.4728),
             (0.1980, 0.2010, 0.1970),
@@ -47,11 +107,30 @@ def prep_data():
         download=True, 
         transform=transform,
     )
-    print(f'{len(train_dataset)=:_}, {len(test_dataset)=:_}')
+    
+    negative_dataset = NegativeSamplesDataset(
+        negative_mat_file,
+        transform=negative_data_transform
+    )
+    
+    # Split negative samples for train/test.
+    neg_size = len(negative_dataset)
+    train_size = int(0.8 * neg_size)
+    test_size = neg_size - train_size
+    neg_train, neg_test = torch.utils.data.random_split(
+        negative_dataset, [train_size, test_size]
+    )
+
+    # Create combined datasets.
+    combined_train = SVHNWithNegativesDataset(train_dataset, neg_train)
+    combined_test = SVHNWithNegativesDataset(test_dataset, neg_test)
+    print(f'Training set: {len(train_dataset):_} digits + {len(neg_train):_} non-digits')
+    print(f'Test set: {len(test_dataset):_} digits + {len(neg_test):_} non-digits')
+    
 
     batch_size = 512 * 2
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True) #, num_workers=os.cpu_count())
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader(combined_train, batch_size=batch_size, shuffle=True) #, num_workers=os.cpu_count())
+    test_loader = DataLoader(combined_test, batch_size=batch_size, shuffle=False)
     return train_loader, test_loader
 
 def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
@@ -60,7 +139,7 @@ def train_model(model, train_loader, checkpoint_epoch, optimizer_state=None):
 
     # Define loss function and optimizer
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-5)
     if optimizer_state is not None:
         optimizer.load_state_dict(optimizer_state)
 
@@ -108,7 +187,7 @@ if '__name__' == '__name__':
     model_checkpoint = 'deepcnn_checkpoint.pth'
 
     print('Creating model...')
-    model = DeeperCNN()
+    model = CNN()
     epoch = 0
     optimizer_state = None
     if os.path.exists(model_weights):

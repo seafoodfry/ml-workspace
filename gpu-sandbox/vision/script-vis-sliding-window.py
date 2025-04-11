@@ -70,11 +70,11 @@ def build_pyramid(image, levels=3):
 if __name__ == "__main__":
     print(halp)
 
-    img_path = './img/015-images/six.jpg'
+    img_path = './cnns/img/buildings-finetune/img-01.jpg'
     img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
 
     downsample_pyr = build_pyramid(img, levels=3)
 
-    delays = [1, 200, 350]
+    delays = [1, 2, 3]
     for pimg, delay in zip(downsample_pyr, delays):
         vis_sliding_window(pimg, delay=delay)
