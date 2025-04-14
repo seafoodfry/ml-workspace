@@ -46,3 +46,39 @@ def save_confusion_matrix(true_labels, predictions, accuracy, img_name):
     plt.title(f'Confusion Matrix - Accuracy: {accuracy:.2f}%')
     plt.savefig(img_name)
     #plt.show()
+
+
+def plot_training_curves(metrics, save_path='training_curves.png'):
+    """
+    Plot training and validation curves.
+    
+    Args:
+        metrics (dict): Dictionary containing metrics lists
+        save_path (str): Path to save the plot
+    """
+    plt.figure(figsize=(12, 5))
+    
+    # Plot loss.
+    plt.subplot(1, 2, 1)
+    plt.plot(metrics['train_losses'], label='Training Loss')
+    plt.plot(metrics['val_losses'], label='Validation Loss')
+    plt.title('Loss Curves')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+    
+    # Plot accuracy
+    plt.subplot(1, 2, 2)
+    plt.plot(metrics['train_accuracies'], label='Training Accuracy')
+    plt.plot(metrics['val_accuracies'], label='Validation Accuracy')
+    plt.title('Accuracy Curves')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy (%)')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
+    print(f"Training curves saved to {save_path}")
