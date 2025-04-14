@@ -13,7 +13,7 @@ import os
 import time
 
 from model_eval import evaluate_model, save_confusion_matrix
-from svhn_script_digit_detector import DigitDetector
+from digit_model import DigitDetector
 
 
 if torch.cuda.is_available():
