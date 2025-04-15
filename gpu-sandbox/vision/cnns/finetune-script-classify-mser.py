@@ -266,6 +266,14 @@ if __name__ == "__main__":
 
     # Load images to classify.
     # Update the path.
+    images = [
+        './cnns/img/buildings-samples/h0.jpg',
+        './cnns/img/buildings-samples/h0-rotated.jpg',
+        './cnns/img/buildings-samples/h1.jpg',
+        './cnns/img/buildings-samples/h2.jpg', # scale_factor = 1/2
+        './cnns/img/buildings-samples/h4.jpg',
+        './cnns/img/buildings-samples/h4-noisy.jpg',
+    ]
     img_path = './cnns/img/buildings-samples/h1.jpg'
     img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
 
