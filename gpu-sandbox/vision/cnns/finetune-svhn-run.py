@@ -302,6 +302,14 @@ def train_model(model, train_loader, val_loader, checkpoint_epoch, optimizer_sta
 if '__name__' == '__name__':
     """
     uv run python cnns/finetune-svhn-run.py
+
+    scp ubuntu@${EC2}:/home/ubuntu/src/deepcnn_checkpoint.pth ./vision/cnns/trained
+
+    scp ubuntu@${EC2}:/home/ubuntu/src/deepcnn_model.pth ./vision/cnns/trained
+
+    scp ubuntu@${EC2}:/home/ubuntu/src/deepcnn-training_curves.png .
+
+    scp ubuntu@${EC2}:/home/ubuntu/src/deepcnn_cm.png .
     """
     # For reproducibility.
     torch.manual_seed(42)
@@ -310,10 +318,10 @@ if '__name__' == '__name__':
     torch.backends.cudnn.benchmark = False
     np.random.seed(42)
 
-    cm_img = 'deepercn_cm.png'
+    cm_img = 'deepcnn_cm.png'
     model_weights = 'deepcnn_model.pth'
     model_checkpoint = 'deepcnn_checkpoint.pth'
-    curves_img = 'training_curves.png'
+    curves_img = 'deepcnn-training_curves.png'
 
     print('Creating model...')
     model = CNN()
@@ -329,7 +337,7 @@ if '__name__' == '__name__':
     print('Created model')
 
     print('Gathering data...')
-    train_loader, val_loader, test_loader = prep_data()
+    train_loader, val_loader, test_loader = prep_data(negative_mat_file='./cnns/negative_samples_finetune.mat')
     print('Gathered data')
 
     print('Training model...')

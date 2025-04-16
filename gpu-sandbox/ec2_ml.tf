@@ -21,7 +21,7 @@
 # source /opt/pytorch/bin/activate
 #
 # rsync -rvzP ubuntu@${EC2}:/home/ubuntu/src/ ./vision/cnns --exclude='data'
-# rsync -rvzP ./vision/ ubuntu@${EC2}:/home/ubuntu/src/ --exclude='data' --exclude='.venv'
+# rsync -rvzP ./vision/ ubuntu@${EC2}:/home/ubuntu/src/ --exclude='data' --exclude='.venv' --exclude='*.pth'
 # scp ubuntu@${EC2}:/home/ubuntu/src/deepercn_cm.png .
 # scp ubuntu@${EC2}:/home/ubuntu/src/training_curves.png .
 # scp ubuntu@${EC2}:/home/ubuntu/src/deepcnn_checkpoint.pth ./vision/cnns/trained
