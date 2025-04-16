@@ -7,10 +7,33 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+import torchvision.models as models
+
 from finetune_model import CNN
 
 
 device = torch.device('cpu')
+
+
+class VGG16Transfer(torch.nn.Module):
+    def __init__(self, num_classes=11):
+        super().__init__()
+
+        # Load pretrained VGG16.
+        self.vgg16 = models.vgg16(weights=models.VGG16_Weights.DEFAULT)
+        
+        # Freeze all feature extraction layers.
+        for param in self.vgg16.features.parameters():
+            param.requires_grad = False
+            
+        # Replace the final layer.
+        # VGG16's last layer has 4096 inputs and 1000 outputs (ImageNet classes).
+        # We modify it to output our 11 classes (0-9 digits + class 10 for non-digits).
+        num_features = self.vgg16.classifier[6].in_features
+        self.vgg16.classifier[6] = torch.nn.Linear(num_features, num_classes)
+    
+    def forward(self, x):
+        return self.vgg16(x)
 
 
 def dedup_boxes(filtered_bboxes, distance_threshold=3):
@@ -73,7 +96,7 @@ def dedup_boxes(filtered_bboxes, distance_threshold=3):
 
     # One more deduping step!
     # This time sort based on x coords.
-    deduped_boxes = sorted(list(deduped.values()), key=lambda box: box[0], reverse=True)
+    deduped_boxes = sorted(list(deduped.values()), key=lambda box: box[1], reverse=True)
 
     # Find groups of bboxes.
     # ASSUMPTION: We want to find the group w/ the most members.
@@ -101,6 +124,8 @@ def dedup_boxes(filtered_bboxes, distance_threshold=3):
 
     # Return the group with the most bounding boxes (likely to be the digits).
     largest_group = max(groups, key=len)
+
+    print(f'unique bboxes deduped by which members are more clustered: {len(largest_group)}')
 
     # Let's add one more deduping step based on area: remove any boxes that are too different in size.
     largest_group = sorted(largest_group, key=lambda box: box[2] * box[3], reverse=True)
@@ -149,13 +174,7 @@ def resize_image_by_factor(image, scale_factor):
     return cv2.resize(image, (new_width, new_height), interpolation=interp)
 
 
-def detect_digits(clf_model, img, scale_factor=1, save_dir = './tmp-mser'):
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    else:
-        for f in os.listdir(save_dir):
-            os.remove(os.path.join(save_dir, f))
-
+def detect_digits(clf_model, img, idx, scale_factor=1, save_dir = './tmp-mser', vgg=False):
     mser = cv2.MSER_create(
         delta=10,
         min_area=20*20,
@@ -174,7 +193,7 @@ def detect_digits(clf_model, img, scale_factor=1, save_dir = './tmp-mser'):
         aspect_ratio = w / h
         if 0.35 < aspect_ratio < 1.5:
             filtered_bboxes.append(bboxes[i])
-        cv2.rectangle(img_copy, (x, y), (x+w, y+h), (0, 0, 255), 1)
+        cv2.rectangle(img_copy, (x, y), (x+w, y+h), (0, 0, 255), 2)
 
     print(f'Number of bounding boxes after filtering based on aspect ratio: {len(filtered_bboxes)}')
     unique_bboxes = dedup_boxes(filtered_bboxes, distance_threshold=20*scale_factor)
@@ -183,7 +202,7 @@ def detect_digits(clf_model, img, scale_factor=1, save_dir = './tmp-mser'):
 
     mean = torch.tensor([0.4377, 0.4438, 0.4728]).view(3, 1, 1).to(device)
     std = torch.tensor([0.1980, 0.2010, 0.1970]).view(3, 1, 1).to(device)
-    window_size = 32
+    last_match = -1 # canary value.
     for i, box in enumerate(unique_bboxes):
         vis = img_copy.copy()
 
@@ -195,9 +214,18 @@ def detect_digits(clf_model, img, scale_factor=1, save_dir = './tmp-mser'):
         cv2.rectangle(vis, (x, y), (x+w, y+h), (0, 255, 0), 3)
 
         # Extract the window.
-        window_orig = img[y:y+h, x:x+w]
-        filtered_window = cv2.bilateralFilter(window_orig, d=5, sigmaColor=75, sigmaSpace=75)
-        window = cv2.resize(filtered_window, (32, 32), interpolation=cv2.INTER_AREA if max(w, h) > 32 else cv2.INTER_LINEAR)
+        offset = 0 if max(h, w) > 100 else 5
+        y_min = y - offset
+        y_max = y + h + offset
+        x_min = x - offset
+        x_max = x + w + offset
+        window_orig = img[y_min:y_max, x_min:x_max]
+        #filtered_window = cv2.bilateralFilter(window_orig, d=5, sigmaColor=75, sigmaSpace=75)
+        if vgg:
+            resize_window = (224, 224)
+        else:
+            resize_window = (32, 32)
+        window = cv2.resize(window_orig, resize_window, interpolation=cv2.INTER_AREA if max(w, h) > 32 else cv2.INTER_LINEAR)
 
         
         # Normalize and convert to tensor.
@@ -217,6 +245,9 @@ def detect_digits(clf_model, img, scale_factor=1, save_dir = './tmp-mser'):
             confidence, prediction = torch.max(probabilities, 1)
             confidence = confidence.item()
             prediction = prediction.item()
+
+        # Update the canary value
+        last_match = prediction
 
         plt.figure(figsize=(12, 8))
         plt.subplot(223)
@@ -244,11 +275,11 @@ def detect_digits(clf_model, img, scale_factor=1, save_dir = './tmp-mser'):
         plt.figtext(0.5, 0.01, f'Position: ({x}, {y}), confidence: {confidence:.6f}', ha='center', fontsize=10)
 
         plt.tight_layout()
-        save_path = os.path.join(save_dir, f'digit_{i}_pred{prediction}_x{x}_y{y}.png')
+        save_path = os.path.join(save_dir, f'{idx}_digit{i}_pred{prediction}_x{x}_y{y}.png')
         plt.savefig(save_path)
         plt.close()
 
-    return filtered_bboxes
+    return last_match == 10 and len(unique_bboxes) == 1
 
 
 
@@ -257,12 +288,24 @@ if __name__ == "__main__":
     uv run python cnns/finetune-script-classify-mser.py
     """
     # Load the model.
-    # Update the path.
-    model_weights = './cnns/trained/deepcnn_model.pth'
-    model = CNN()
+    use_vgg = False
+    if use_vgg:
+        model_weights = './cnns/trained/vgg_model.pth'
+        model = VGG16Transfer(num_classes=11)
+    else:
+        model_weights = './cnns/trained/deepcnn_model.pth'
+        model = CNN()
     model.load_state_dict(torch.load(model_weights, map_location=device))
     model = model.to(device) 
     model.eval()
+
+    save_dir = './tmp-mser'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    else:
+        for f in os.listdir(save_dir):
+            os.remove(os.path.join(save_dir, f))
+
 
     # Load images to classify.
     # Update the path.
@@ -271,10 +314,16 @@ if __name__ == "__main__":
         './cnns/img/buildings-samples/h0-rotated.jpg',
         './cnns/img/buildings-samples/h1.jpg',
         './cnns/img/buildings-samples/h2.jpg', # scale_factor = 1/2
-        './cnns/img/buildings-samples/h4.jpg',
-        './cnns/img/buildings-samples/h4-noisy.jpg',
+        './cnns/img/buildings-samples/h1-noisy.jpg',
     ]
-    img_path = './cnns/img/buildings-samples/h1.jpg'
-    img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
-
-    detect_digits(model, img, scale_factor=1, save_dir = './tmp-mser')
+    #img_path = './cnns/img/buildings-samples/h1.jpg'
+    for idx, img_path in enumerate(images):
+        print(f'>>> Processing {img_path}')
+        img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+        retry = detect_digits(model, img, idx, scale_factor=1, save_dir=save_dir, vgg=use_vgg)
+        if retry:
+            print(f'Retrying run on {img_path} with a smaller scale factor')
+            idx += 0.5
+            scale_factor = 1/2
+            img = resize_image_by_factor(img, scale_factor)
+            detect_digits(model, img, idx, scale_factor=scale_factor, save_dir=save_dir, vgg=use_vgg)
