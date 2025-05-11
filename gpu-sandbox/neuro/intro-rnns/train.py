@@ -44,7 +44,12 @@ def train_model(
                 label_tensor, text_tensor = label_tensor.to(device), text_tensor.to(device)
                 
                 # Forward pass.
-                output = model.forward(text_tensor)
+                # Note: the example we used in the tutorial did model.forward(...)
+                # but calling forward directly does not take into account the model's
+                # current mode (train vs. eval), which is important if the modelf uses
+                # things like dropout or batchnorm (and the idiomatic thing figures out
+                # whetehr to call model.eval() or model.train()).
+                output = model(text_tensor)
                 loss = criterion(output, label_tensor)
                 batch_loss += loss
 
