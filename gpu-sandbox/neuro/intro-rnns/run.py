@@ -137,12 +137,13 @@ if __name__ == '__main__':
     print('Created model')
 
     print('Training model...')
-    num_epochs=1
+    num_epochs=3
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-5)
     all_losses = train_model(
         device, model, train_set,
         optimizer,
         num_epochs=num_epochs,
+        n_batch_size = 1*64,
     )
     print('Trained model')
 
