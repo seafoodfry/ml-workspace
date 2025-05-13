@@ -39,7 +39,8 @@ def save_confusion_matrix(device, model, test_loader, classes, img_name):
     # Initialize lists to store true labels and predictions.
     true_labels = []
     predictions = []
-
+    correct = 0
+    total = 0
     with torch.no_grad():
         for labels, sequences, seq_lengths, orig_labels, _ in tqdm(test_loader):
             labels = labels.to(device)
@@ -55,10 +56,17 @@ def save_confusion_matrix(device, model, test_loader, classes, img_name):
             true_labels.extend(labels.cpu().numpy())
             predictions.extend(predicted.cpu().numpy())
 
+            #correct += (predicted == labels).sum().item()
+            correct += torch.sum(predicted == labels).item()
+            total += labels.size(0)
+
             # If you need the actual class names instead of indices
             # (labels_tensors are indices).
             # true_class_names.extend([classes[idx] for idx in labels.cpu().numpy()])
             # predicted_class_names.extend([classes[idx] for idx in predicted.cpu().numpy()])
+
+    accuracy = 100 * correct / total
+    print(f'Accuracy: {accuracy:.2f}%')
 
     # Generate confusion matrix using sklearn
     cm = confusion_matrix(true_labels, predictions)
@@ -82,9 +90,10 @@ def save_confusion_matrix(device, model, test_loader, classes, img_name):
     ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
     ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
 
-    # Add axis labels
+    # Add axis labels.
     ax.set_xlabel('Predicted Label')
     ax.set_ylabel('True Label')
+    plt.title(f'Confusion Matrix - Accuracy: {accuracy:.2f}%')
 
     plt.tight_layout()
     plt.savefig(img_name)
