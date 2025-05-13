@@ -6,13 +6,13 @@ import os
 import time
 
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 
 from tqdm import tqdm
 
 from train import train_model
-from model_simple import CharRNN
+from model_simple import BatchCharRNN
 from model_eval import save_confusion_matrix, plot_training_curves
 
 
@@ -55,7 +55,6 @@ def lineToTensor(line):
 
 
 class NamesDataset(Dataset):
-
     def __init__(self, data_dir):
         self.data_dir = data_dir #for provenance of the dataset
         self.load_time = time.localtime #for provenance of the dataset
@@ -96,8 +95,46 @@ class NamesDataset(Dataset):
         data_tensor = self.data_tensors[idx]
         label_tensor = self.labels_tensors[idx]
 
+        # I.e.,
+        # tensor([12]), [seq_length, 1, N_LETTERS], 'Czech', 'Abl'
         return label_tensor, data_tensor, data_label, data_item
-    
+
+
+def collate_batch(batch):
+    # Sort batch by sequence length (descending) - required for packed sequence.
+    batch.sort(key=lambda x: len(x[1]), reverse=True)
+
+    # Get components.
+    labels = [item[0] for item in batch]
+    sequences = [item[1] for item in batch]
+    orig_labels = [item[2] for item in batch]
+    orig_data = [item[3] for item in batch]
+
+    # Stack labels into tensor.
+    # The issue is that when you simply stack individual tensors of shape [1],
+    # you get a tensor of shape [batch_size, 1]. But for the NLLLoss function,
+    # you need a tensor of shape [batch_size].
+    labels_tensor = torch.stack(labels).squeeze(1)
+
+    # Get sequence lengths for pack_padded_sequence.
+    seq_lengths = [seq.size(0) for seq in sequences]
+    max_length = max(seq_lengths)
+
+    # Create padded input tensor [batch_size, max_seq_len, input_size].
+    batch_size = len(sequences)
+    input_size = sequences[0].size(2)
+    padded_sequences = torch.zeros(batch_size, max_length, input_size)
+
+    # Fill padded_sequences with data.
+    for i, (seq, length) in enumerate(zip(sequences, seq_lengths)):
+        # Remove the middle dimension (which is 1).
+        seq_reshaped = seq.squeeze(1)
+        # Copy the sequence data.
+        padded_sequences[i, :length] = seq_reshaped
+
+    return labels_tensor, padded_sequences, seq_lengths, orig_labels, orig_data
+
+
 def prep_data(data_dir: str):
     alldata = NamesDataset(data_dir)
 
@@ -133,17 +170,24 @@ if __name__ == '__main__':
     print('Creating model...')
     # 8 input nodes, 128 hidden nodes, and 18 outputs.
     n_hidden = 128
-    model = CharRNN(N_LETTERS, n_hidden, len(alldata.labels_uniq))
+    model = BatchCharRNN(N_LETTERS, n_hidden, len(alldata.labels_uniq))
     print('Created model')
 
     print('Training model...')
-    num_epochs=3
+    # Create DataLoader with our custom collate function.
+    train_loader = DataLoader(
+        train_set,
+        batch_size=1*64,
+        shuffle=True,
+        collate_fn=collate_batch,
+    )
+
+    num_epochs=10
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-5)
     all_losses = train_model(
-        device, model, train_set,
+        device, model, train_loader,
         optimizer,
         num_epochs=num_epochs,
-        n_batch_size = 1*64,
     )
     print('Trained model')
 
@@ -157,5 +201,12 @@ if __name__ == '__main__':
     print('saved model')
 
     print('Doing analysis...')
+    # Create DataLoader with our custom collate function.
+    test_loader = DataLoader(
+        test_set,
+        batch_size=1*64,
+        shuffle=True,
+        collate_fn=collate_batch,
+    )
     plot_training_curves(all_losses, curves_img)
-    save_confusion_matrix(device, model, test_set, classes=alldata.labels_uniq, img_name=cm_img)
+    save_confusion_matrix(device, model, test_loader, classes=alldata.labels_uniq, img_name=cm_img)

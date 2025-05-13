@@ -33,7 +33,7 @@ def label_from_output(output, output_labels):
     return output_labels[label_i], label_i
 
 
-def save_confusion_matrix(device, model, testing_data, classes, img_name):
+def save_confusion_matrix(device, model, test_loader, classes, img_name):
     model.eval()
 
     # Initialize lists to store true labels and predictions.
@@ -41,17 +41,24 @@ def save_confusion_matrix(device, model, testing_data, classes, img_name):
     predictions = []
 
     with torch.no_grad():
-        for i in tqdm(range(len(testing_data))):
-            (__label_tensor, text_tensor, label, text) = testing_data[i]
-            text_tensor = text_tensor.to(device)
+        for labels, sequences, seq_lengths, orig_labels, _ in tqdm(test_loader):
+            labels = labels.to(device)
+            sequences = sequences.to(device)
 
-            # Forward pass.
-            output = model(text_tensor)
-            guess, guess_i = label_from_output(output, classes)
-            label_i = classes.index(label)
+            # Forward pass with batch processing.
+            outputs = model(sequences, seq_lengths)  # Shape: [batch_size, num_classes]
 
-            true_labels.append(label_i)
-            predictions.append(guess_i)
+            # Get predicted class indices.
+            _, predicted = torch.max(outputs, 1)   # Shape: [batch_size]
+
+            # Add to lists for confusion matrix.
+            true_labels.extend(labels.cpu().numpy())
+            predictions.extend(predicted.cpu().numpy())
+
+            # If you need the actual class names instead of indices
+            # (labels_tensors are indices).
+            # true_class_names.extend([classes[idx] for idx in labels.cpu().numpy()])
+            # predicted_class_names.extend([classes[idx] for idx in predicted.cpu().numpy()])
 
     # Generate confusion matrix using sklearn
     cm = confusion_matrix(true_labels, predictions)
