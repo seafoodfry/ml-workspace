@@ -10,10 +10,9 @@ from tqdm import tqdm
 def train_model(
     device,
     model,
-    training_data,
+    train_loader,
     optimizer,
     num_epochs=60,
-    n_batch_size = 64,
     report_every = 50,
     criterion = nn.NLLLoss(),
 ):
@@ -21,50 +20,40 @@ def train_model(
     model = model.to(device)
 
     # Keep track of losses for plotting
-    current_loss = 0
     all_losses = []
-    model.train()
-    
-    print(f"training on data set with n = {len(training_data)}")
-
     for epoch in tqdm(range(1, num_epochs + 1)):
         model.train()
-        model.zero_grad() # clear the gradients
+        #model.zero_grad() # clear the gradients
+        current_loss = 0
 
-        # create some minibatches
-        # we cannot use dataloaders because each of our names is a different length
-        batches = list(range(len(training_data)))
-        random.shuffle(batches)
-        batches = np.array_split(batches, len(batches) //n_batch_size )
+        for labels, sequences, seq_lengths, _, _ in train_loader:
+            labels = labels.to(device)
+            sequences = sequences.to(device)
+            #seq_lengths = seq_lengths.to(device)
 
-        for idx, batch in enumerate(batches):
-            batch_loss = 0
-            for i in batch: # for each example in this batch
-                (label_tensor, text_tensor, label, text) = training_data[i]
-                label_tensor, text_tensor = label_tensor.to(device), text_tensor.to(device)
-                
-                # Forward pass.
-                # Note: the example we used in the tutorial did model.forward(...)
-                # but calling forward directly does not take into account the model's
-                # current mode (train vs. eval), which is important if the modelf uses
-                # things like dropout or batchnorm (and the idiomatic thing figures out
-                # whetehr to call model.eval() or model.train()).
-                output = model(text_tensor)
-                loss = criterion(output, label_tensor)
-                batch_loss += loss
+            # Forward pass.
+            # Note: the example we used in the tutorial did model.forward(...)
+            # but calling forward directly does not take into account the model's
+            # current mode (train vs. eval), which is important if the modelf uses
+            # things like dropout or batchnorm (and the idiomatic thing figures out
+            # whetehr to call model.eval() or model.train()).
+            optimizer.zero_grad()
+            outputs = model(sequences, seq_lengths)
+
+            # Compute loss.
+            loss = criterion(outputs, labels)
 
             # Backward pass and optimize.
             # Also add radient clipping to prevent exploding gradients
-            batch_loss.backward()
+            loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(),  max_norm=1.0)
+            optimizer.step()  # Update parameters
 
-            # Update parameters
-            optimizer.step()
-            optimizer.zero_grad()
+            current_loss += loss.item()
 
-            current_loss += batch_loss.item() / len(batch)
-
-        all_losses.append(current_loss / len(batches) )
+        # Average loss for this epoch
+        epoch_loss = current_loss / len(train_loader)
+        all_losses.append(epoch_loss)
         if epoch % report_every == 0:
              tqdm.write(f"{epoch} ({epoch / num_epochs:.0%}): \t average batch loss = {all_losses[-1]}")
         current_loss = 0
