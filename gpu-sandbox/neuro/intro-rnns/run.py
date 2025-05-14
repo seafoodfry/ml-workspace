@@ -138,15 +138,45 @@ def collate_batch(batch):
 def prep_data(data_dir: str):
     alldata = NamesDataset(data_dir)
 
-    train_size = int(0.85 * len(alldata))
-    test_size = len(alldata) - train_size
-    train_set, test_set = torch.utils.data.random_split(
+    train_val_size = int(0.85 * len(alldata))
+    test_size = len(alldata) - train_val_size
+    train_val_set, test_set = torch.utils.data.random_split(
         alldata,
-        [train_size, test_size],
+        [train_val_size, test_size],
         #generator=torch.Generator(device=device).manual_seed(2024),
     )
 
-    return train_set, test_set, alldata
+    # Split train_val into train and validation.
+    train_size = int(0.85 * len(train_val_set))  # 85% of train_val (or ~72.25% of total)
+    val_size = len(train_val_set) - train_size  # 15% of train_val (or ~12.75% of total)
+    train_set, val_set = torch.utils.data.random_split(
+        train_val_set,
+        [train_size, val_size],
+    )
+
+    batch_size = 1*64
+    train_loader = DataLoader(
+        train_set,
+        batch_size=batch_size,
+        shuffle=True,
+        collate_fn=collate_batch,
+    )
+
+    val_loader = DataLoader(
+        val_set,
+        batch_size=batch_size,
+        shuffle=False,  # No need to shuffle validation data
+        collate_fn=collate_batch,
+    )
+
+    test_loader = DataLoader(
+        test_set,
+        batch_size=batch_size,
+        shuffle=False,
+        collate_fn=collate_batch,
+    )
+
+    return train_loader, val_loader, test_loader, alldata
 
 if __name__ == '__main__':
     """
@@ -161,31 +191,23 @@ if __name__ == '__main__':
     model_weights = 'charrnn_simple_model.pth'
     model_checkpoint = 'charrnn_simple_checkpoint.pth'
     curves_img = 'charrnn_simple-training_curves.png'
-    cm_img = 'charrnn_simple_cm.png'
+    cm_img = 'charrnn_simple-cm.png'
 
     print('Gathering data...')
-    train_set, test_set, alldata = prep_data(data_dir='data/names')
+    train_loader, val_loader, test_loader, alldata = prep_data(data_dir='data/names')
     print('Gathered data')
 
     print('Creating model...')
     # 8 input nodes, 128 hidden nodes, and 18 outputs.
     n_hidden = 128
-    model = BatchCharRNN(N_LETTERS, n_hidden, len(alldata.labels_uniq))
+    model = BatchCharRNN(N_LETTERS, n_hidden, len(alldata.labels_uniq), num_layers=2, dropout_rate=0.3)
     print('Created model')
 
     print('Training model...')
-    # Create DataLoader with our custom collate function.
-    train_loader = DataLoader(
-        train_set,
-        batch_size=1*64,
-        shuffle=True,
-        collate_fn=collate_batch,
-    )
-
-    num_epochs=10
+    num_epochs=20
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-5)
-    all_losses = train_model(
-        device, model, train_loader,
+    metrics = train_model(
+        device, model, train_loader, val_loader,
         optimizer,
         num_epochs=num_epochs,
     )
@@ -201,12 +223,5 @@ if __name__ == '__main__':
     print('saved model')
 
     print('Doing analysis...')
-    # Create DataLoader with our custom collate function.
-    test_loader = DataLoader(
-        test_set,
-        batch_size=1*64,
-        shuffle=True,
-        collate_fn=collate_batch,
-    )
-    plot_training_curves(all_losses, curves_img)
+    plot_training_curves(metrics, curves_img)
     save_confusion_matrix(device, model, test_loader, classes=alldata.labels_uniq, img_name=cm_img)
