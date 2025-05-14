@@ -44,14 +44,18 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class BatchCharRNN(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, num_layers=1):
+    def __init__(self, input_size, hidden_size, output_size, num_layers=1, dropout_rate=0.2):
         super().__init__()
 
         # If batch_first=True, then the input and output tensors are provided as
         # (batch, seq, feature) instead of (seq, batch, feature).
         self.rnn = nn.RNN(input_size, hidden_size, num_layers, batch_first=True)
-        self.h2o = nn.Linear(hidden_size, output_size)  # "hidden to output".
-        self.softmax = nn.LogSoftmax(dim=1)
+
+        self.classifier = nn.Sequential(
+            nn.Dropout(dropout_rate),
+            nn.Linear(hidden_size, output_size),  # "hidden to output".
+            nn.LogSoftmax(dim=1),
+        )
 
     def forward(self, input_seq, seq_lengths):
         """
@@ -114,7 +118,6 @@ class BatchCharRNN(nn.Module):
         # You want to extract information from INTERMEDIATE states, not just the final state.
         __packed_output, hidden = self.rnn(packed_input)
         hidden = hidden[-1]  # Take the last layer's hidden state.
-        output = self.h2o(hidden)
-        output = self.softmax(output)
+        output = self.classifier(hidden)
 
         return output

@@ -200,7 +200,7 @@ if __name__ == '__main__':
     print('Creating model...')
     # 8 input nodes, 128 hidden nodes, and 18 outputs.
     n_hidden = 128
-    model = BatchCharRNN(N_LETTERS, n_hidden, len(alldata.labels_uniq), num_layers=2, dropout_rate=0.2)
+    model = BatchCharRNN(N_LETTERS, n_hidden, len(alldata.labels_uniq), num_layers=2, dropout_rate=0.3)
     print('Created model')
 
     print('Training model...')
