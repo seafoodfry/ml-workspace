@@ -52,6 +52,7 @@ class BatchCharRNN(nn.Module):
         self.rnn = nn.RNN(input_size, hidden_size, num_layers, batch_first=True)
 
         self.classifier = nn.Sequential(
+            nn.BatchNorm1d(hidden_size),
             nn.Dropout(dropout_rate),
             nn.Linear(hidden_size, output_size),  # "hidden to output".
             nn.LogSoftmax(dim=1),

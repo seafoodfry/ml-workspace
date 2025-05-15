@@ -199,17 +199,26 @@ if __name__ == '__main__':
 
     print('Creating model...')
     # 8 input nodes, 128 hidden nodes, and 18 outputs.
-    n_hidden = 128
-    model = BatchCharRNN(N_LETTERS, n_hidden, len(alldata.labels_uniq), num_layers=2, dropout_rate=0.3)
+    n_hidden = 32
+    model = BatchCharRNN(N_LETTERS, n_hidden, len(alldata.labels_uniq), num_layers=2, dropout_rate=0.5)
     print('Created model')
 
     print('Training model...')
-    num_epochs=20
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-5)
+    num_epochs=80
+    learning_rate=0.01
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=5e-4)
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+        optimizer,
+        max_lr=learning_rate,           # Peak learning rate during the cycle
+        total_steps=num_epochs * len(train_loader),  # Total number of training iterations
+        pct_start=0.3,         # Percentage of training where LR increases (30% up, 70% down)
+        div_factor=25          # Initial LR = max_lr/div_factor
+    )
     metrics = train_model(
         device, model, train_loader, val_loader,
-        optimizer,
+        optimizer, scheduler,
         num_epochs=num_epochs,
+        report_every=10,
     )
     print('Trained model')
 
