@@ -10,7 +10,7 @@ from tqdm import tqdm
 def train_model(
     device, model,
     train_loader, val_loader,
-    optimizer,
+    optimizer, scheduler,
     num_epochs=60,
     report_every = 50,
     criterion = nn.NLLLoss(),
@@ -63,6 +63,10 @@ def train_model(
             correct += (predicted == labels).sum().item()
             total += labels.size(0)
 
+            # If using OneCycleLR, call scheduler.step() after each batch
+            if scheduler is not None and isinstance(scheduler, torch.optim.lr_scheduler.OneCycleLR):
+                scheduler.step()
+
         # Average loss for this epoch
         epoch_loss = current_loss / len(train_loader)
         train_accuracy = 100 * correct / total
@@ -94,9 +98,12 @@ def train_model(
         val_losses.append(val_loss)
         val_accuracies.append(val_accuracy)
 
+        # If using ReduceLROnPlateau, call scheduler.step() after validation
+        if scheduler is not None and isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+            scheduler.step(val_loss)
 
         if epoch % report_every == 0:
-             tqdm.write(f"{epoch} ({epoch / num_epochs:.0%}): \t train loss = {train_losses[-1]:.4f}, train acc = {train_accuracy:.2f}%, val loss = {val_loss:.4f}, val acc = {val_accuracy:.2f}%")
+             tqdm.write(f"{epoch} ({epoch / num_epochs:.0%}): {scheduler.get_last_lr()=} train loss = {train_losses[-1]:.4f}, train acc = {train_accuracy:.2f}%, val loss = {val_loss:.4f}, val acc = {val_accuracy:.2f}%")
         current_loss = 0
 
     # Save metrics for plotting.
